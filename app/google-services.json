@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "959223559992",
+    "project_id": "tricktrack-d7726",
+    "storage_bucket": "tricktrack-d7726.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:959223559992:android:6039233aabc9869fe1f3cd",
+        "android_client_info": {
+          "package_name": "com.tricktrack.tricktrack"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "959223559992-3d6r46tknck4rpvku58j8fadok2rhqu1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCx9-F6tpJbOTjomIxgqGefaqeUhtpouZ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "959223559992-3d6r46tknck4rpvku58j8fadok2rhqu1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.yandex.mapkit.mapview.MapView
+        android:id="@+id/mapview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/zoom_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="80dp"
+        android:backgroundTint="@color/white"
+        android:elevation="0dp"
+        android:src="@drawable/ic_baseline_location_searching_24"
+        app:borderWidth="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/icons_linear_layout"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/round_back_white_20"
+        android:elevation="10dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <ImageView
+            android:id="@+id/favorite_spots_icon"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/favorite_spots_icon_not_pressed" />
+
+        <ImageView
+            android:id="@+id/nearby_spots_icon"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/nearby_spots_icon_not_pressed" />
+
+        <ImageView
+            android:id="@+id/add_spot_icon"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:src="@drawable/add_spot_icon_not_pressed" />
+
+        <ImageView
+            android:id="@+id/settings_icon"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/settings_icon_not_pressed" />
+
+        <ImageView
+            android:id="@+id/more_icon"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/more_icon_not_pressed" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/bottom_sheet_dialog_linear_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginBottom="70dp"
+        android:background="@drawable/round_back_white_20"
+        android:elevation="10dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:padding="16dp">
+
+        <TextView
+            android:transitionName="bottomSheetTitle"
+            android:id="@+id/bottom_sheet_dialog_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="@string/add_spot"
+            android:textColor="@color/black"
+            android:textSize="21sp" />
+
+        <TextView
+            android:id="@+id/bottom_sheet_dialog_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:text="@string/you_need_to_sign_in"
+            android:layout_marginTop="10dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/google_sign_in_button"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginHorizontal="20dp"
+            app:icon="@drawable/google_logo"
+            app:iconSize="20dp"
+            android:textAllCaps="false"
+            android:text="@string/sign_in_with_google"
+            app:iconGravity="start"
+            app:iconTint="@color/cool_teal"
+            android:textColor="@color/black"
+            app:iconPadding="4dp"
+            android:backgroundTint="@color/lighter_grey"
+            android:elevation="5dp"
+            android:layout_marginTop="10dp"/>
+        
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/add_spot_button"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginHorizontal="20dp"
+            android:textAllCaps="false"
+            android:text="@string/add_spot_button"
+            android:textColor="@color/black"
+            android:elevation="5dp"
+            android:backgroundTint="@color/lighter_grey"
+            android:layout_marginTop="10dp"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+    <!--<ProgressBar
+        android:id="@+id/loading_progress_bar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="35dp"
+        android:layout_marginBottom="45dp"
+        android:visibility="gone"
+        android:layout_centerHorizontal="true" />-->
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

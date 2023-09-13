@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">TrickTrack</string>
+    <string name="title_activity_maps">MapsActivity</string>
+    <string name="location_not_available">Данные о местоположении недоступны</string>
+    <string name="add_spot">Добавить спот</string>
+    <string name="you_need_to_sign_in">Чтобы добавить спот или шоп на карту, необходимо авторизоваться</string>
+    <string name="sign_in_with_google">Войти с помощью Google</string>
+    <string name="add_spot_button">Перейти к добавлению спота или шопа на карту</string>
+    <string name="title">Название</string>
+    <string name="description">Описание</string>
+    <string name="tap_on_map_to_add_marker">Нажмите на карту, чтобы добавить метку</string>
+    <string name="skatepark">Открытый скейтпарк</string>
+    <string name="covered_skatepark">Крытый скейтпарк</string>
+    <string name="street_spot">Стрит</string>
+    <string name="diy_spot">D.I.Y</string>
+    <string name="dirt">Dirt</string>
+    <string name="shop">Шоп</string>
+</resources>
