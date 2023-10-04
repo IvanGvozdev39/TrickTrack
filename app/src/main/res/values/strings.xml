@@ -3,16 +3,101 @@
     <string name="title_activity_maps">MapsActivity</string>
     <string name="location_not_available">Данные о местоположении недоступны</string>
     <string name="add_spot">Добавить спот</string>
+    <string name="spot_add">Добавление спота</string>
     <string name="you_need_to_sign_in">Чтобы добавить спот или шоп на карту, необходимо авторизоваться</string>
     <string name="sign_in_with_google">Войти с помощью Google</string>
+    <string name="sign_out">Выйти из аккаунта</string>
     <string name="add_spot_button">Перейти к добавлению спота или шопа на карту</string>
     <string name="title">Название</string>
     <string name="description">Описание</string>
-    <string name="tap_on_map_to_add_marker">Нажмите на карту, чтобы добавить метку</string>
+    <string name="tap_on_map_to_add_marker">1/2 Нажмите на карту,\nчтобы добавить метку</string>
+    <string name="spot_info">2/2 Информация о споте</string>
     <string name="skatepark">Открытый скейтпарк</string>
     <string name="covered_skatepark">Крытый скейтпарк</string>
     <string name="street_spot">Стрит</string>
     <string name="diy_spot">D.I.Y</string>
     <string name="dirt">Dirt</string>
     <string name="shop">Шоп</string>
+    <string name="choose_spot_type">Выберите тип спота</string>
+    <string name="choose_spot_condition">Выберите состояние спота</string>
+    <string name="excelent">Отличное</string>
+    <string name="good">Хорошее</string>
+    <string name="normal">Нормальное</string>
+    <string name="bad">Плохое</string>
+    <string name="very_bad">Ужасное</string>
+    <string name="tap_on_map_to_add_marker_no_digits">Нажмите на карту, чтобы добавить метку</string>
+    <string name="all_fields_are_compulsory">Все поля обязательны</string>
+    <string name="confirm_spot_add">Подтвердить добавление нового спота на карту?</string>
+    <string name="upload_to_moderation">Отправление на модерацию...</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="image_upload">Загрузка изображений на облако</string>
+    <string name="spot_info_upload">Загрузка данных о споте</string>
+    <string name="new_spot_successfuly_sent_to_moderation">Новый спот был успешно отправлен на модерацию</string>
+    <string name="ok">Ок</string>
+    <string name="spot_loading">Загрузка спотов...</string>
+    <string name="go_to_spot_info">Перейти к информации о споте</string>
+    <string name="spot_review">Обзор спота</string>
+    <string name="condition">Состояние:&#160;</string>
+    <string name="enter_username">Придумайте имя пользователя (оно будет отображаться в описании добавленных вами спотов, также учитываться в рейтингах).</string>
+    <string name="username">Имя пользователя</string>
+    <string name="confirm">Подтвердить</string>
+    <string name="field_cannot_be_empty">Поле не может быть пустым</string>
+    <string name="given_username_already_taken">Данное имя уже занято</string>
+    <string name="username_successfully_set">Имя пользователя успешно установлено.</string>
+    <string name="updated">Обновлено&#160;</string>
+    <string name="by_user">&#160;пользователем</string>
+    <string name="route">Маршрут</string>
+    <string name="spot_editing">Редактирование спота</string>
+    <string name="confirm_spot_edit">Подтвердить изменения?</string>
+    <string name="changes_were_sent">Изменения были успешно отправлены на модерацию</string>
+    <string name="you_need_to_sign_in_to_edit">Чтобы вносить изменения в споты необходимо войти в аккаунт</string>
+    <string name="no_map_app_on_device">На устройстве не найдено подходящего приложения с картами</string>
+    <string name="bookmark_addition_error">Ошибка добавления в избранное</string>
+    <string name="bookmark_removal_error">Ошибка удаления из избранного</string>
+    <string name="you_need_to_sign_in_to_bookmark">Чтобы добавлять споты в избранное необходимо войти в аккаунт</string>
+    <string name="you_need_to_sign_in_to_delete">Чтобы заявить неактуальность спота необходимо войти в аккаунт</string>
+    <string name="you_successfully_signed_in_as">Выполнен вход как&#160;</string>
+    <string name="favorite_spots">Любимые споты</string>
+    <string name="spots_nearby">Ближайшие 10 спотов</string>
+    <string name="you_need_to_sign_in_to_favorites">Чтобы добавлять споты в избранное необходимо войти в аккаунт</string>
+    <string name="theres_nothing_in_favorites_yet">В избранном пока ничего нет</string>
+    <string name="location_data_not_available">Данные о местоположении недоступны</string>
+    <string name="km">&#160;км</string>
+    <string name="account_sign_in">Вход в аккаунт</string>
+    <string name="set_username">Установить имя пользователя</string>
+    <string name="change_username">Сменить имя пользователя</string>
+    <string name="account">Аккаунт</string>
+    <string name="code_of_conduct_at_spot">Кодекс поведения на споте</string>
+    <string name="code_of_conduct_content_1"><b>Общие правила:</b>\n1) Соблюдайте очередь на трюк.\n\n2) Не мусорьте на споте.</string>
+    <string name="code_of_conduct_content_2">На фото макба. Там каждую ночь мусор убирают, что происходит далеко не на всех спотах, но репутация райдеров подпорчена.
+    \n\n3) Не спорьте с охранниками, в большинстве случаев они просто выполняют свою работу. Можно попробовать договориться, но не нужно быть упрямым, грубить или игнорировать их.
+    \n\n4) Не катайтесь под алкоголем. Это лишь снизит продуктивность катки и вероятность призема трюка, но сильно повысит опасность падений.
+    \n\n5) Разминайтесь перед катанием. Это снижает опасность сломаться и ускоряет раскатку.\n
+    \n\n6) Не подрезайте других райдеров.
+    \n\n7) Не крадите трюк, который другой райдер долго пытается приземлить. Лучше немного подождать.
+    \n\n8) Не бросайте доску далеко от себя в приступе ярости.
+    \n\n9) Не заходите в кадр / уважительно относитесь к райдерам, снимающим трюки, и их операторам.
+    \n\n10) Самостоятельно не вносите изменения в дерт-трассы.
+    \n\n11) Не катайтесь по мокрым дертам.
+    \n\n\n<b>В скейт-парке:</b>\n\n1) На фигурах не сидеть\n\n2) Не ехать против естественного течения и паттерна парка, если это помешает другим райдерам.
+    \n\n3) Не наносить парафин на флет, не наносить слишком много воска.
+    \n\n4) Не кататься флет на приземах / подъездах других фигур.
+        \n\n5) Не ставить доску на tail stall, пока в рампе кто-то катается.</string>
+    <string name="no_internet">Отсутствует подключение к интернету</string>
+    <string name="connection_recovered">Подключение восстановлено</string>
+    <string name="username_length_exceeded">Длина никнейма не может превышать 20 символов</string>
+    <string name="update_ui">Обновить список спотов</string>
+    <string name="spots_suggested">Предложено спотов:&#160;</string>
+    <string name="delete_confirm_dialog_content">Вы уверены, что данный спот является неактуальным и его следует удалить из TrickTrack?</string>
+    <string name="delete_suggestion_sent">Предложение об удалении спота успешно отправлено на модерацию</string>
+    <string name="search_by_title">Поиск по названию спота</string>
+    <string name="no_results_found">Ничего не найдено</string>
+    <string name="choose_dice_configuration">Выберите, какие споты будут учитываться в рандоме:</string>
+    <string name="closest_25_spots">Ближайшие 25 спотов</string>
+    <string name="all_spots">Все споты</string>
+    <string name="choose_one_option">Выберите один из вариантов</string>
+    <string name="again">Повторить</string>
+    <string name="go_back">Назад</string>
+
 </resources>

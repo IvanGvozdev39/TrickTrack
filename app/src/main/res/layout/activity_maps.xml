@@ -1,13 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <com.yandex.mapkit.mapview.MapView
         android:id="@+id/mapview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="32dp"
+        tools:layout_editor_absoluteY="0dp" />
+
+    <RelativeLayout
+        android:id="@+id/search_relative_layout"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="28dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <SearchView
+            android:id="@+id/search_view"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="74dp"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/round_back_white_20"
+            android:elevation="5dp"
+            android:iconifiedByDefault="false"
+            app:queryBackground="@android:color/transparent"
+            app:submitBackground="@android:color/transparent"
+            android:queryHint="@string/search_by_title"
+            android:theme="@style/CustomSearchViewStyle" />
+
+        <ImageView
+            android:id="@+id/search_icon_text_view"
+            android:layout_width="27dp"
+            android:layout_height="27dp"
+            android:layout_alignStart="@id/search_view"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="9dp"
+            android:elevation="10dp"
+            android:src="@drawable/search_icon" />
+
+        <ProgressBar
+            android:id="@+id/loading_seach_output"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_alignStart="@id/search_view"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"
+            android:elevation="10dp"
+            android:indeterminateDrawable="@drawable/custom_progress_bar_light_grey" />
+
+        <ImageView
+            android:id="@+id/close_icon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_alignEnd="@+id/search_view"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="14dp"
+            android:layout_marginTop="8.5dp"
+            android:elevation="10dp"
+            android:visibility="gone"
+            android:src="@drawable/close_icon" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/dice_button"
+            android:layout_width="50dp"
+            android:layout_height="45dp"
+            android:background="@drawable/round_back_white_20"
+            app:icon="@drawable/dice_icon"
+            app:iconTint="@color/light_grey"
+            app:iconGravity="textStart"
+            android:paddingStart="8dp"
+            android:paddingEnd="0dp"
+            android:elevation="10dp"
+            android:theme="@style/WhiteMaterialButtonBackground"
+            app:iconSize="20dp"
+            android:layout_marginEnd="16dp"
+            android:layout_alignParentEnd="true"/>
+
+    </RelativeLayout>
+
+
+    <LinearLayout
+        android:id="@+id/no_internet_linear_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginHorizontal="16dp"
+        android:background="@drawable/round_back_white_20"
+        android:elevation="10dp"
+        android:layout_marginTop="-9dp"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/search_relative_layout">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/no_internet_icon" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="4dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/no_internet"
+            android:textColor="@color/black"
+            android:textSize="15sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/search_output_linear_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginTop="80dp"
+        android:background="@drawable/round_back_white_20"
+        android:layout_marginHorizontal="16dp"
+        android:visibility="gone"
+        android:elevation="10dp"
+        app:layout_constraintTop_toBottomOf="@id/no_internet_linear_layout"
+        android:layout_marginBottom="70dp"
+        android:gravity="center_horizontal">
+
+
+        <TextView
+            android:id="@+id/nothing_found_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/light_grey"
+            android:textSize="15sp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:visibility="gone"
+            android:text="@string/no_results_found"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/search_output_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginVertical="10dp"/>
+
+    </LinearLayout>
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/zoom_fab"
@@ -23,10 +173,99 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
+        android:id="@+id/spots_loading_linear_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="10dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/icons_linear_layout">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/spot_loading"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/loading_progress_bar"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="4dp"
+            android:indeterminateDrawable="@drawable/custom_progress_bar_black" />
+
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/spot_link_constraint_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/round_back_white_20"
+        android:elevation="10dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/spots_loading_linear_layout">
+
+        <ImageButton
+            android:id="@+id/cancel_spot_link_image_button"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:background="@color/transparent"
+            android:padding="2dp"
+            android:src="@drawable/cross"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/cancel_spot_link_image_button"
+            android:layout_marginHorizontal="20dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/spot_link_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="Family Boarshop"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="-4dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/go_to_spot_info"
+                android:textAlignment="center"
+                android:textColor="@color/cool_teal"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
         android:id="@+id/icons_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_marginHorizontal="10dp"
+        android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="10dp"
         android:background="@drawable/round_back_white_20"
         android:elevation="10dp"
@@ -58,19 +297,137 @@
             android:src="@drawable/add_spot_icon_not_pressed" />
 
         <ImageView
-            android:id="@+id/settings_icon"
+            android:id="@+id/code_of_conduct_icon"
             android:layout_width="0dp"
             android:layout_height="30dp"
             android:layout_weight="1"
-            android:src="@drawable/settings_icon_not_pressed" />
+            android:src="@drawable/handshake_icon" />
 
         <ImageView
-            android:id="@+id/more_icon"
+            android:id="@+id/account_icon"
             android:layout_width="0dp"
             android:layout_height="30dp"
             android:layout_weight="1"
-            android:src="@drawable/more_icon_not_pressed" />
+            android:src="@drawable/account_circle_light_grey" />
 
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/bottom_sheet_dialog_favorites"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="70dp"
+        android:background="@drawable/round_back_white_20"
+        android:elevation="10dp"
+        android:gravity="center_horizontal"
+        android:maxHeight="500dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHeight_max="500dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+
+            <TextView
+                android:id="@+id/bottom_sheet_dialog_title_favorites"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/favorite_spots"
+                android:textColor="@color/black"
+                android:textSize="21sp"
+                android:textStyle="bold"
+                android:transitionName="bottomSheetTitle" />
+
+            <ProgressBar
+                android:id="@+id/loading_favorites"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:indeterminateDrawable="@drawable/custom_progress_bar_black"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/nothing_in_favorites_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/theres_nothing_in_favorites_yet"
+                android:textColor="@color/light_grey"
+                android:textSize="18sp"
+                android:transitionName="bottomSheetTitle"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/favorite_spots_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/bottom_sheet_dialog_nearby"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="70dp"
+        android:background="@drawable/round_back_white_20"
+        android:elevation="10dp"
+        android:gravity="center_horizontal"
+        android:maxHeight="500dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHeight_max="500dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+
+            <TextView
+                android:id="@+id/bottom_sheet_dialog_title_nearby"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/spots_nearby"
+                android:textColor="@color/black"
+                android:textSize="21sp"
+                android:textStyle="bold"
+                android:transitionName="bottomSheetTitle" />
+
+            <ProgressBar
+                android:id="@+id/loading_nearby"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:indeterminateDrawable="@drawable/custom_progress_bar_black"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/nearby_spots_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp" />
+
+        </LinearLayout>
     </LinearLayout>
 
 
@@ -78,66 +435,252 @@
         android:id="@+id/bottom_sheet_dialog_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="10dp"
+        android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="70dp"
         android:background="@drawable/round_back_white_20"
         android:elevation="10dp"
         android:gravity="center_horizontal"
         android:orientation="vertical"
+        android:padding="16dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:padding="16dp">
+        app:layout_constraintRight_toRightOf="parent">
 
         <TextView
-            android:transitionName="bottomSheetTitle"
             android:id="@+id/bottom_sheet_dialog_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textStyle="bold"
             android:text="@string/add_spot"
             android:textColor="@color/black"
-            android:textSize="21sp" />
+            android:textSize="21sp"
+            android:textStyle="bold"
+            android:transitionName="bottomSheetTitle" />
 
         <TextView
             android:id="@+id/bottom_sheet_dialog_details"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/black"
-            android:textSize="18sp"
+            android:layout_marginTop="10dp"
             android:text="@string/you_need_to_sign_in"
-            android:layout_marginTop="10dp"/>
+            android:textColor="@color/black"
+            android:textSize="18sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/google_sign_in_button"
             android:layout_width="match_parent"
             android:layout_height="55dp"
             android:layout_marginHorizontal="20dp"
-            app:icon="@drawable/google_logo"
-            app:iconSize="20dp"
-            android:textAllCaps="false"
-            android:text="@string/sign_in_with_google"
-            app:iconGravity="start"
-            app:iconTint="@color/cool_teal"
-            android:textColor="@color/black"
-            app:iconPadding="4dp"
+            android:layout_marginTop="10dp"
             android:backgroundTint="@color/lighter_grey"
             android:elevation="5dp"
-            android:layout_marginTop="10dp"/>
-        
+            android:text="@string/sign_in_with_google"
+            android:textAllCaps="false"
+            android:textColor="@color/black"
+            app:icon="@drawable/google_logo"
+            app:iconGravity="start"
+            app:iconPadding="4dp"
+            app:iconSize="20dp"
+            app:iconTint="@color/cool_teal" />
+
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/add_spot_button"
             android:layout_width="match_parent"
             android:layout_height="55dp"
             android:layout_marginHorizontal="20dp"
-            android:textAllCaps="false"
-            android:text="@string/add_spot_button"
-            android:textColor="@color/black"
-            android:elevation="5dp"
-            android:backgroundTint="@color/lighter_grey"
             android:layout_marginTop="10dp"
-            android:visibility="gone"/>
+            android:backgroundTint="@color/lighter_grey"
+            android:elevation="5dp"
+            android:text="@string/add_spot_button"
+            android:textAllCaps="false"
+            android:textColor="@color/black"
+            android:visibility="gone" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/bottom_sheet_dialog_code_of_conduct"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="70dp"
+        android:background="@drawable/round_back_white_20"
+        android:elevation="10dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHeight_max="500dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="-150dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="@string/code_of_conduct_at_spot"
+                    android:textColor="@color/black"
+                    android:textSize="21sp"
+                    android:textStyle="bold"
+                    android:transitionName="bottomSheetTitle" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/code_of_conduct_content_1"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:transitionName="bottomSheetTitle" />
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginHorizontal="10dp"
+                    android:src="@drawable/macba_at_night" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/code_of_conduct_content_2"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:transitionName="bottomSheetTitle" />
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginHorizontal="10dp"
+                    android:src="@drawable/tail_stall" />
+
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/bottom_sheet_dialog_account"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="70dp"
+        android:background="@drawable/round_back_white_20"
+        android:elevation="10dp"
+        android:gravity="center_horizontal"
+        android:maxHeight="500dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHeight_max="500dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+
+            <TextView
+                android:id="@+id/bottom_sheet_dialog_title_account"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/account_sign_in"
+                android:textColor="@color/black"
+                android:textSize="21sp"
+                android:textStyle="bold"
+                android:transitionName="bottomSheetTitle" />
+
+            <TextView
+                android:id="@+id/spots_suggested_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/spots_suggested"
+                android:textColor="@color/light_grey"
+                android:textSize="15sp"
+                android:visibility="gone" />
+
+            <ProgressBar
+                android:id="@+id/loading_account"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:indeterminateDrawable="@drawable/custom_progress_bar_black"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/google_sign_in_button_account"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/lighter_grey"
+                android:elevation="5dp"
+                android:text="@string/sign_in_with_google"
+                android:textAllCaps="false"
+                android:textColor="@color/black"
+                app:icon="@drawable/google_logo"
+                app:iconGravity="start"
+                app:iconPadding="4dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/cool_teal" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/username_button"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/lighter_grey"
+                android:elevation="5dp"
+                android:text="@string/set_username"
+                android:textAllCaps="false"
+                android:textColor="@color/black"
+                android:visibility="gone"
+                app:icon="@drawable/username_icon"
+                app:iconGravity="start"
+                app:iconPadding="4dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/light_grey" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/sign_out_button"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/lighter_grey"
+                android:elevation="5dp"
+                android:text="@string/sign_out"
+                android:textAllCaps="false"
+                android:textColor="@color/black"
+                android:visibility="gone"
+                app:icon="@drawable/sign_out_icon"
+                app:iconGravity="start"
+                app:iconPadding="4dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/light_grey" />
+
+
+        </LinearLayout>
     </LinearLayout>
 
     <!--<ProgressBar

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginHorizontal="16dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="10dp">
+
+    <LinearLayout
+        android:id="@+id/main_linear_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp">
+
+        <TextView
+            android:id="@+id/dialog_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/choose_dice_configuration"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
+
+        <ListView
+            android:id="@+id/dice_mode_list_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/error_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/red"
+            android:textSize="15sp" />
+
+        <FrameLayout
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/button_confirm"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="6dp"
+                android:background="@color/transparent"
+                android:text="@string/confirm"
+                android:textAllCaps="true"
+                android:textColor="@color/cool_teal"
+                android:textStyle="bold" />
+
+            <ProgressBar
+                android:id="@+id/loading_dice"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="2dp"
+                android:indeterminateDrawable="@drawable/custom_progress_bar_black"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/output"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="10dp"
+        android:visibility="gone">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/dice_recycler_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="40dp">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/button_again"
+                    android:layout_width="100dp"
+                    android:layout_height="40dp"
+                    android:background="@color/transparent"
+                    android:text="@string/again"
+                    android:textAllCaps="true"
+                    android:textColor="@color/cool_teal"
+                    android:textStyle="bold" />
+
+                <ProgressBar
+                    android:id="@+id/loading_dice_output"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:layout_gravity="center"
+                    android:indeterminateDrawable="@drawable/custom_progress_bar_black"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/button_back"
+                android:layout_width="70dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="6dp"
+                android:background="@color/transparent"
+                android:text="@string/go_back"
+                android:textAllCaps="true"
+                android:textColor="@color/cool_teal"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

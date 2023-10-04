@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="dice_mode">
+        <item>@string/spots_nearby</item>
+        <item>@string/closest_25_spots</item>
+        <item>@string/favorite_spots</item>
+        <item>@string/all_spots</item>
+    </string-array>
+</resources>
