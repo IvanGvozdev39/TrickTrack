@@ -1,15 +1,16 @@
 package com.tricktrack.tricktrack
 
-import android.content.res.Resources
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
-class NearbySpotsAdapter(private val onItemClick: (NearbySpot) -> Unit) : RecyclerView.Adapter<NearbySpotsAdapter.ViewHolder>() {
+class NearbySpotsAdapter(val context: Context, val nightRideMode: Boolean, private val onItemClick: (NearbySpot) -> Unit) : RecyclerView.Adapter<NearbySpotsAdapter.ViewHolder>() {
 
     private val items: MutableList<NearbySpot> = mutableListOf()
 
@@ -21,6 +22,10 @@ class NearbySpotsAdapter(private val onItemClick: (NearbySpot) -> Unit) : Recycl
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(R.layout.nearby_spots_item, parent, false)
+        if (nightRideMode) {
+            itemView.findViewById<CardView>(R.id.main_background_near_item).setBackgroundResource(R.drawable.round_back_dark_lighter_20)
+            itemView.findViewById<TextView>(R.id.spot_title).setTextColor(context.getColor(R.color.lighter_grey))
+        }
         return ViewHolder(itemView)
     }
 

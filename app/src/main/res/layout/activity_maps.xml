@@ -90,6 +90,45 @@
     </RelativeLayout>
 
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/feedback_button"
+        android:layout_width="50dp"
+        android:layout_height="45dp"
+        android:background="@drawable/round_back_white_20"
+        app:icon="@drawable/complain"
+        app:iconTint="@color/light_grey"
+        app:iconGravity="textStart"
+        android:paddingStart="10dp"
+        android:layout_marginTop="-5dp"
+        android:paddingEnd="0dp"
+        android:elevation="10dp"
+        android:theme="@style/WhiteMaterialButtonBackground"
+        app:iconSize="28dp"
+        android:layout_marginEnd="16dp"
+        android:layout_alignParentEnd="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search_relative_layout"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/settings_button"
+        android:layout_width="50dp"
+        android:layout_height="45dp"
+        android:background="@drawable/round_back_white_20"
+        app:icon="@drawable/ic_baseline_settings_24"
+        app:iconTint="@color/light_grey"
+        app:iconGravity="textStart"
+        android:paddingStart="8dp"
+        android:layout_marginTop="10dp"
+        android:paddingEnd="0dp"
+        android:elevation="10dp"
+        android:theme="@style/WhiteMaterialButtonBackground"
+        app:iconSize="28dp"
+        android:layout_marginEnd="16dp"
+        android:layout_alignParentEnd="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/feedback_button"/>
+
+
     <LinearLayout
         android:id="@+id/no_internet_linear_layout"
         android:layout_width="wrap_content"
@@ -159,16 +198,20 @@
     </LinearLayout>
 
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/zoom_fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="80dp"
-        android:backgroundTint="@color/white"
         android:elevation="0dp"
+        android:background="@drawable/round_back_white_circle"
         android:src="@drawable/ic_baseline_location_searching_24"
-        app:borderWidth="0dp"
+        app:icon="@drawable/ic_baseline_location_searching_24"
+        app:iconSize="25dp"
+        app:backgroundTint="@color/white"
+        app:iconTint="@color/light_grey"
+        android:paddingStart="15dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -183,6 +226,7 @@
         app:layout_constraintBottom_toTopOf="@id/icons_linear_layout">
 
         <TextView
+            android:id="@+id/spots_loading_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/spot_loading"
@@ -247,6 +291,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/show_spot_details_textview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -358,6 +403,31 @@
                 android:visibility="gone" />
 
             <TextView
+                android:id="@+id/you_need_to_sign_in_for_favorites"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/you_need_to_sign_in_to_favorites"
+                android:textColor="@color/light_grey"
+                android:textSize="18sp"
+                android:layout_marginTop="4dp"
+                android:gravity="center_horizontal"
+                android:transitionName="bottomSheetTitle"
+                android:visibility="gone" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/go_to_signin_button_favorites"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/lighter_grey"
+                android:elevation="5dp"
+                android:visibility="gone"
+                android:text="@string/sign_in_or_sign_up"
+                android:textAllCaps="false"
+                android:textColor="@color/black" />
+
+            <TextView
                 android:id="@+id/nothing_in_favorites_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -459,29 +529,27 @@
 
         <TextView
             android:id="@+id/bottom_sheet_dialog_details"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
             android:text="@string/you_need_to_sign_in"
-            android:textColor="@color/black"
+            android:textColor="@color/light_grey"
             android:textSize="18sp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/google_sign_in_button"
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/sign_in_dialog_open"
             android:layout_width="match_parent"
             android:layout_height="55dp"
             android:layout_marginHorizontal="20dp"
             android:layout_marginTop="10dp"
             android:backgroundTint="@color/lighter_grey"
             android:elevation="5dp"
-            android:text="@string/sign_in_with_google"
+            android:text="@string/sign_in_or_sign_up"
             android:textAllCaps="false"
             android:textColor="@color/black"
-            app:icon="@drawable/google_logo"
-            app:iconGravity="start"
-            app:iconPadding="4dp"
-            app:iconSize="20dp"
-            app:iconTint="@color/cool_teal" />
+            android:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/add_spot_button"
@@ -495,6 +563,8 @@
             android:textAllCaps="false"
             android:textColor="@color/black"
             android:visibility="gone" />
+
+
     </LinearLayout>
 
 
@@ -528,6 +598,7 @@
 
 
                 <TextView
+                    android:id="@+id/code_of_conduct_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
@@ -538,6 +609,7 @@
                     android:transitionName="bottomSheetTitle" />
 
                 <TextView
+                    android:id="@+id/code_1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -553,6 +625,7 @@
                     android:src="@drawable/macba_at_night" />
 
                 <TextView
+                    android:id="@+id/code_2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -626,7 +699,7 @@
                 android:indeterminateDrawable="@drawable/custom_progress_bar_black"
                 android:visibility="gone" />
 
-            <com.google.android.material.button.MaterialButton
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/google_sign_in_button_account"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
@@ -634,14 +707,9 @@
                 android:layout_marginTop="10dp"
                 android:backgroundTint="@color/lighter_grey"
                 android:elevation="5dp"
-                android:text="@string/sign_in_with_google"
+                android:text="@string/sign_in_or_sign_up"
                 android:textAllCaps="false"
-                android:textColor="@color/black"
-                app:icon="@drawable/google_logo"
-                app:iconGravity="start"
-                app:iconPadding="4dp"
-                app:iconSize="20dp"
-                app:iconTint="@color/cool_teal" />
+                android:textColor="@color/black" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/username_button"
@@ -674,6 +742,24 @@
                 android:textColor="@color/black"
                 android:visibility="gone"
                 app:icon="@drawable/sign_out_icon"
+                app:iconGravity="start"
+                app:iconPadding="4dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/light_grey" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/delete_account_button"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/lighter_grey"
+                android:elevation="5dp"
+                android:text="@string/delete_account"
+                android:textAllCaps="false"
+                android:textColor="@color/black"
+                android:visibility="gone"
+                app:icon="@drawable/ic_delete_account"
                 app:iconGravity="start"
                 app:iconPadding="4dp"
                 app:iconSize="20dp"

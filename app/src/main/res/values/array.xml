@@ -6,4 +6,38 @@
         <item>@string/favorite_spots</item>
         <item>@string/all_spots</item>
     </string-array>
+
+    <string-array name="language_preference">
+        <item>@string/english</item>
+        <item>@string/russian</item>
+    </string-array>
+    
+    <string-array name="language_preference_hardcode">
+        <item>Английский</item>
+        <item>Русский</item>
+    </string-array>
+
+    <string-array name="language_codes">
+        <item>en</item>
+        <item>ru</item>
+    </string-array>
+
+    <string-array name="types_hardcode">
+        <item>Открытый скейтпарк</item>
+        <item>Крытый скейтпарк</item>
+        <item>Стрит</item>
+        <item>D.I.Y</item>
+        <item>Shop</item>
+        <item>Dirt</item>
+    </string-array>
+
+    <string-array name="types">
+        <item>@string/skatepark</item>
+        <item>@string/covered_skatepark</item>
+        <item>@string/street_spot</item>
+        <item>@string/diy_spot</item>
+        <item>@string/shop</item>
+        <item>@string/dirt</item>
+    </string-array>
+
 </resources>

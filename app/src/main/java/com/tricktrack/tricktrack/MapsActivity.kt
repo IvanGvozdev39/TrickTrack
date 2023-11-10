@@ -3,22 +3,28 @@ package com.tricktrack.tricktrack
 import android.Manifest
 import android.app.Activity
 import android.app.Dialog
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.icu.lang.UCharacter
 import android.location.Location
 import android.location.LocationManager
 import android.net.ConnectivityManager
+import android.os.Build
 import android.os.Bundle
+import android.text.*
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.View
 import android.view.Window
+import android.view.WindowManager
 import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.activity.result.ActivityResult
@@ -28,6 +34,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.AppCompatButton
+import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -39,12 +46,21 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.OnFailureListener
+import com.google.android.gms.tasks.OnSuccessListener
+import com.google.android.gms.tasks.Task
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.nl.translate.Translation
+import com.google.mlkit.nl.translate.TranslatorOptions
 import com.tricktrack.tricktrack.internet_connection.Common
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKit
@@ -59,6 +75,7 @@ import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.runtime.image.ImageProvider
 import java.lang.Math.*
+import java.util.*
 import kotlin.math.pow
 
 
@@ -96,11 +113,11 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
     private lateinit var mapObjectTapListener: MapObjectTapListener
     private lateinit var spotLinkConstraintLayout: ConstraintLayout
     private lateinit var spotLinkTitle: TextView
-    private lateinit var zoomFab: FloatingActionButton
+    private lateinit var zoomFab: MaterialButton
     private lateinit var cancelSpotLinkButton: ImageButton
     private var mapObjectTapListenerPointlessArray = arrayListOf<MapObjectTapListener>()
     private lateinit var inputListener: InputListener
-    private lateinit var dialogGoogleSignIn: Dialog
+    private lateinit var dialogSignIn: Dialog
     private var googleSignInDialogDismiss = false
     private lateinit var nothingInFavoritesTV: TextView
     private lateinit var bottomSheetDialogNearby: LinearLayout
@@ -110,8 +127,9 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
     private lateinit var signInLauncher: ActivityResultLauncher<Intent>
     private lateinit var bottomSheetDialogAccount: LinearLayout
     private lateinit var bottomSheetDialogAccountTitle: TextView
-    private lateinit var googleSignInButtonAccount: MaterialButton
+    private lateinit var googleSignInButtonAccount: AppCompatButton
     private lateinit var signOutBtn: MaterialButton
+    private lateinit var deleteAccountBtn: MaterialButton
     private lateinit var usernameBtn: MaterialButton
     private lateinit var loadingAccount: ProgressBar
     private lateinit var bottomSheetDialogCodeOfConduct: LinearLayout
@@ -126,6 +144,17 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
     private lateinit var dialogBtnConfirm: AppCompatButton
     private lateinit var dialogBtnAgain: AppCompatButton
     private lateinit var diceDialogErrorMessage: TextView
+    private var onLeftTab = true
+    private lateinit var pref: SharedPreferences
+    private lateinit var diceBtn: MaterialButton
+    private lateinit var feedbackButton: MaterialButton
+    private lateinit var settingsButton: MaterialButton
+    private lateinit var iconsLinearLayout: LinearLayout
+    private lateinit var searchOutputLinearLayout: LinearLayout
+
+    //Translation:
+    private val languagesTranslationCodes = arrayOf("en", "ru")
+    private val conditions = DownloadConditions.Builder().requireWifi().build()
 
     init {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -179,6 +208,8 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
 
         setContentView(R.layout.activity_maps)
 
+        pref = getSharedPreferences("Settings", Context.MODE_PRIVATE)
+
         val slideUpAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_up_anim)
         val slideDownAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_down_anim)
         val slideDownOpenAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_down_open_anim)
@@ -186,11 +217,13 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
         val fadeInAnimation = AnimationUtils.loadAnimation(this, R.anim.fade_in_anim)
         val fadeOutAnimation = AnimationUtils.loadAnimation(this, R.anim.fade_out_anim)
 
+        iconsLinearLayout = findViewById(R.id.icons_linear_layout)
+
         val filter = IntentFilter()
         filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION)
         registerReceiver(networkChangeReceiver, filter)
 
-        searchView = findViewById<SearchView>(R.id.search_view)
+        searchView = findViewById(R.id.search_view)
 
         val searchIconId = resources.getIdentifier("android:id/search_mag_icon", null, null)
         val searchIcon = searchView.findViewById(searchIconId) as ImageView
@@ -201,7 +234,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
         closeIcon.setImageResource(android.R.color.transparent)
 
 
-        bottomSheetDialogFavorites = findViewById<LinearLayout>(R.id.bottom_sheet_dialog_favorites)
+        bottomSheetDialogFavorites = findViewById(R.id.bottom_sheet_dialog_favorites)
 
         spotsLoadingLinearLayout = findViewById(R.id.spots_loading_linear_layout)
         spotLinkConstraintLayout = findViewById(R.id.spot_link_constraint_layout)
@@ -214,6 +247,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
         bottomSheetDialogAccountTitle = findViewById(R.id.bottom_sheet_dialog_title_account)
         googleSignInButtonAccount = findViewById(R.id.google_sign_in_button_account)
         signOutBtn = findViewById(R.id.sign_out_button)
+        deleteAccountBtn = findViewById(R.id.delete_account_button)
         bottomSheetDialogAccount = findViewById(R.id.bottom_sheet_dialog_account)
         usernameBtn = findViewById(R.id.username_button)
         loadingAccount = findViewById(R.id.loading_account)
@@ -242,7 +276,8 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                                             dialogUsernameSetUp(false)
                                         } else {
                                             if (googleSignInDialogDismiss) {
-                                                dialogGoogleSignIn.dismiss()
+                                                dialogSignIn.dismiss()
+                                                zoomFab.visibility = View.VISIBLE
                                             } else {
                                                 val i = Intent(this, MapsActivity::class.java)
                                                 startActivity(i)
@@ -253,7 +288,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                                         dialogUsernameSetUp(false)
                                     }
                             } else {
-
+                                //here's basically where logs show up
                             }
                         }
                 } else {
@@ -283,7 +318,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
         locationOnMapKit = mapView?.mapWindow?.let { mapKit.createUserLocationLayer(it) }!!
         locationOnMapKit.isVisible = true
 
-        zoomFab = findViewById<FloatingActionButton>(R.id.zoom_fab)
+        zoomFab = findViewById(R.id.zoom_fab)
         zoomFab.setOnClickListener {
             searchView.clearFocus()
             // Check for location permission and availability when the button is clicked
@@ -294,7 +329,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
             searchView.clearFocus()
             zoomFab.visibility = View.VISIBLE
             spotLinkConstraintLayout.visibility = View.GONE
-            spotLinkTitle.setText("")
+            spotLinkTitle.text = ""
         }
 
         /*// Check if permission is not granted
@@ -323,10 +358,9 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                 .build()
         client = GoogleSignIn.getClient(this, options)
 
-        findViewById<Button>(R.id.google_sign_in_button).setOnClickListener {
+        findViewById<AppCompatButton>(R.id.sign_in_dialog_open).setOnClickListener {   //add spot sign in button
             searchView.clearFocus()
-            val intent = client.signInIntent
-            signInLauncher.launch(intent)
+            signInDialogShowup()
         }
 
         bottomSheetDialogFavorites.setOnClickListener { searchView.clearFocus() }
@@ -352,7 +386,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                 bottomSheetDialogAccount.visibility = View.GONE
                 bottomSheetDialogNearby.visibility = View.GONE
                 bottomSheetDialogLinearLayout.visibility = View.GONE
-                loadingFavorites = findViewById<ProgressBar>(R.id.loading_favorites)
+                loadingFavorites = findViewById(R.id.loading_favorites)
                 nothingInFavoritesTV.visibility = View.GONE
                 nearbySpotsIconPressed = false
                 codeOfConductIconPressed = false
@@ -421,12 +455,13 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                 bottomSheetDialogNearby.visibility = View.GONE
                 bottomSheetDialogAccount.visibility = View.GONE
                 if (FirebaseAuth.getInstance().currentUser != null) {
-                    findViewById<Button>(R.id.google_sign_in_button).visibility = View.GONE
+                    findViewById<AppCompatButton>(R.id.sign_in_dialog_open).visibility = View.GONE
                     bottomSheetDialogDetails.visibility = View.GONE
                     addSpotBtn.visibility = View.VISIBLE
                 } else {
                     googleSignInDialogDismiss = false
-                    findViewById<Button>(R.id.google_sign_in_button).visibility = View.VISIBLE
+                    findViewById<AppCompatButton>(R.id.sign_in_dialog_open).visibility =
+                        View.VISIBLE
                     bottomSheetDialogDetails.visibility = View.VISIBLE
                     addSpotBtn.visibility = View.GONE
                 }
@@ -512,32 +547,31 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
 
                 if (FirebaseAuth.getInstance().currentUser == null) {
                     googleSignInButtonAccount.setOnClickListener {
-                        val intent = client.signInIntent
-                        signInLauncher.launch(intent)
+                        signInDialogShowup()
                     }
                 } else {
                     googleSignInButtonAccount.visibility = View.GONE
                     loadingAccount.visibility = View.VISIBLE
                     usernameBtn.visibility = View.GONE
                     signOutBtn.visibility = View.GONE
+                    deleteAccountBtn.visibility = View.GONE
                     bottomSheetDialogAccountTitle.visibility = View.GONE
                     db.collection("Users").document(FirebaseAuth.getInstance().currentUser!!.uid)
                         .get().addOnSuccessListener { document ->
                             loadingAccount.visibility = View.GONE
                             usernameBtn.visibility = View.VISIBLE
                             signOutBtn.visibility = View.VISIBLE
-                            if (document.get("username").toString().isEmpty()) {
-                                bottomSheetDialogAccountTitle.setText(getString(R.string.account))
+                            deleteAccountBtn.visibility = View.VISIBLE
+                            if (document.get("username") == null) {
+                                bottomSheetDialogAccountTitle.text = getString(R.string.account)
                                 bottomSheetDialogAccountTitle.visibility = View.VISIBLE
                                 usernameBtn.setOnClickListener {
                                     dialogUsernameSetUp(false)
                                 }
                             } else {
-                                bottomSheetDialogAccountTitle.setText(
-                                    document.get("username").toString()
-                                )
+                                bottomSheetDialogAccountTitle.text = document.get("username").toString()
                                 bottomSheetDialogAccountTitle.visibility = View.VISIBLE
-                                usernameBtn.setText(getString(R.string.change_username))
+                                usernameBtn.text = getString(R.string.change_username)
 
                                 usernameBtn.setOnClickListener {
                                     dialogUsernameSetUp(true)
@@ -559,6 +593,61 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                                 finish()
                             }
 
+                            deleteAccountBtn.setOnClickListener {
+                                val dialogAccountDelete = Dialog(this)
+                                dialogAccountDelete.requestWindowFeature(Window.FEATURE_NO_TITLE)
+                                dialogAccountDelete.setCancelable(true)
+                                dialogAccountDelete.setContentView(R.layout.dialog_delete_account)
+                                dialogAccountDelete.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                                val dialogBtnNo = dialogAccountDelete.findViewById<AppCompatButton>(R.id.button_no)
+                                dialogBtnNo.setOnClickListener {
+                                    dialogAccountDelete.dismiss()
+                                }
+                                val dialogLoading = dialogAccountDelete.findViewById<ProgressBar>(R.id.loading_progress_bar)
+                                val dialogContent = dialogAccountDelete.findViewById<TextView>(R.id.dialog_content)
+                                val dialogBtnYes = dialogAccountDelete.findViewById<AppCompatButton>(R.id.button_yes)
+                                val dialogBtnOk = dialogAccountDelete.findViewById<AppCompatButton>(R.id.button_ok)
+
+                                if (pref.getBoolean("NightRideMode", false)) {
+                                    dialogLoading.indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_white)
+                                    dialogAccountDelete.findViewById<CardView>(R.id.main_background_delete_confirm).setBackgroundResource(R.drawable.round_back_dark_20)
+                                    dialogContent.setTextColor(getColor(R.color.lighter_grey))
+                                }
+
+                                dialogBtnYes.setOnClickListener {
+                                    dialogAccountDelete.setCancelable(false)
+                                    dialogBtnYes.visibility = View.GONE
+                                    dialogBtnNo.visibility = View.GONE
+                                    dialogLoading.visibility = View.VISIBLE
+                                    db.collection("Users").document(auth.currentUser!!.uid).delete()
+                                        .addOnSuccessListener {
+                                            auth.currentUser!!.delete().addOnCompleteListener { task ->
+                                                if (task.isSuccessful) {
+                                                    dialogContent.text = getString(R.string.account_deleted_successfully)
+                                                    dialogLoading.visibility = View.GONE
+                                                    dialogBtnNo.visibility = View.GONE
+                                                    dialogBtnYes.visibility = View.GONE
+                                                    dialogBtnOk.visibility = View.VISIBLE
+                                                    dialogAccountDelete.setCancelable(true)
+                                                    closeAllBottomTabs()
+                                                }
+                                            }
+                                        }.addOnFailureListener {
+                                            dialogAccountDelete.dismiss()
+                                            Toast.makeText(this@MapsActivity, getString(R.string.error_occurred), Toast.LENGTH_SHORT).show()
+                                        }
+                                }
+
+                                dialogBtnOk.setOnClickListener {
+                                    dialogAccountDelete.dismiss()
+                                    startActivity(Intent(this@MapsActivity, MapsActivity::class.java))
+                                    finish()
+                                }
+
+
+                                dialogAccountDelete.show()
+                            }
+
                         }
                 }
 
@@ -574,7 +663,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
         fetchAndProcessSpots()
 
         val searchCancelIcon = findViewById<ImageView>(R.id.close_icon)
-        val searchOutputLinearLayout = findViewById<LinearLayout>(R.id.search_output_linear_layout)
+        searchOutputLinearLayout = findViewById<LinearLayout>(R.id.search_output_linear_layout)
         val nothingFoundTV = findViewById<TextView>(R.id.nothing_found_text_view)
         val loadingSearchOutput = findViewById<ProgressBar>(R.id.loading_seach_output)
         val searchIconTV = findViewById<ImageView>(R.id.search_icon_text_view)
@@ -584,7 +673,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
             clearSearchViewQuery()
         }
 
-        searchView.setOnQueryTextFocusChangeListener { view, hasFocus ->
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 // Call your function when the SearchView gains focus
                 onMapTap()
@@ -593,7 +682,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String): Boolean {
-                if (newText.isNullOrBlank()) {
+                if (newText.isBlank()) {
                     searchCancelIcon.visibility = View.GONE
                     searchIconTV.startAnimation(fadeInAnimation)
                     searchIconTV.visibility = View.VISIBLE
@@ -616,7 +705,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                         searchOutputLinearLayout.startAnimation(slideDownOpenAnimation)
                         playSearchAnim = false
                     }
-                    val adapter = NearbySpotsAdapter { clickedItem ->
+                    val adapter = NearbySpotsAdapter(this@MapsActivity, pref.getBoolean("NightRideMode", false)) { clickedItem ->
                         // Handle the item click here
                         val reviewIntent = Intent(this@MapsActivity, SpotReviewActivity::class.java)
                         reviewIntent.putExtra("latitude", clickedItem.latitude)
@@ -626,7 +715,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                         startActivity(reviewIntent)
                     }
 
-                    val adapterFavorites = FavoriteSpotsAdapter { clickedItem ->
+                    val adapterFavorites = FavoriteSpotsAdapter(this@MapsActivity, pref.getBoolean("Translation", false), pref.getBoolean("NightRideMode", false)) {clickedItem ->
                         val reviewIntent = Intent(this@MapsActivity, SpotReviewActivity::class.java)
                         reviewIntent.putExtra("latitude", clickedItem.latitude)
                         reviewIntent.putExtra("longitude", clickedItem.longitude)
@@ -668,7 +757,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                                         val longitude = document.getDouble("longitude") ?: 0.0
                                         val type = document.getString("type") ?: ""
 
-                                        var distance: Float = 0F
+                                        var distance: Float
                                         if (location != null) {
                                             distance = calculateDistance(
                                                 userLocation.latitude,
@@ -693,7 +782,8 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                                                     title,
                                                     latitude,
                                                     longitude,
-                                                    type
+                                                    type,
+                                                    ""
                                                 )
                                             )
                                         }
@@ -728,7 +818,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                                         }
                                     }
                                 }
-                                .addOnFailureListener { exception ->
+                                .addOnFailureListener {
                                     // Handle errors
                                 }
                         }
@@ -743,7 +833,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
             }
         })
 
-        val diceBtn = findViewById<MaterialButton>(R.id.dice_button)
+        diceBtn = findViewById<MaterialButton>(R.id.dice_button)
         diceBtn.setOnClickListener {
             onMapTap()
             clearSearchViewQuery()
@@ -753,11 +843,19 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
             dialogDice.setCancelable(true)
             dialogDice.setContentView(R.layout.dialog_dice)
             dialogDice.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            dialogBtnConfirm = dialogDice.findViewById<AppCompatButton>(R.id.button_confirm)
-            diceDialogErrorMessage = dialogDice.findViewById<TextView>(R.id.error_message)
+            dialogBtnConfirm = dialogDice.findViewById(R.id.button_confirm)
+            diceDialogErrorMessage = dialogDice.findViewById(R.id.error_message)
+
+            if (pref.getBoolean("NightRideMode", false)) {
+                dialogDice.findViewById<TextView>(R.id.dialog_content).setTextColor(getColor(R.color.lighter_grey))
+                dialogDice.findViewById<CardView>(R.id.main_background_dice_dialog).setBackgroundResource(R.drawable.round_back_dark_20)
+            }
 
             val diceListView = dialogDice.findViewById<ListView>(R.id.dice_mode_list_view)
-            val arrayAdapter = ArrayAdapter(
+            val arrayAdapter = if (pref.getBoolean("NightRideMode", false)) CustomArrayAdapterSingleChoice(
+                this@MapsActivity, android.R.layout.simple_list_item_single_choice,
+                resources.getStringArray(R.array.dice_mode)
+            ) else ArrayAdapter(
                 this@MapsActivity, android.R.layout.simple_list_item_single_choice,
                 resources.getStringArray(R.array.dice_mode)
             )
@@ -770,7 +868,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
             val dialogDiceOutputLinear = dialogDice.findViewById<LinearLayout>(R.id.output)
 
             val dialogBtnBack = dialogDice.findViewById<AppCompatButton>(R.id.button_back)
-            dialogBtnAgain = dialogDice.findViewById<AppCompatButton>(R.id.button_again)
+            dialogBtnAgain = dialogDice.findViewById(R.id.button_again)
             loadingDiceOutput = dialogDice.findViewById(R.id.loading_dice_output)
 
             loadingDice = dialogDice.findViewById(R.id.loading_dice)
@@ -782,29 +880,34 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
 
 
             dialogBtnConfirm.setOnClickListener {
-                diceDialogErrorMessage.setText("")
+                diceDialogErrorMessage.text = ""
                 if (diceModeChosen.isEmpty())
-                    diceDialogErrorMessage.setText(getString(R.string.choose_one_option))
+                    diceDialogErrorMessage.text = getString(R.string.choose_one_option)
                 else {
                     dialogBtnConfirm.visibility = View.GONE
                     loadingDice.visibility = View.VISIBLE
+                    if (pref.getBoolean("NightRideMode", false))
+                        loadingDice.indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_white)
                     dialogBtnAgain.visibility = View.GONE
                     loadingDiceOutput.visibility = View.VISIBLE
-                    if (diceModeChosen.equals(getString(R.string.spots_nearby))) {
+                    if (pref.getBoolean("NightRideMode", false))
+                        loadingDiceOutput.indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_white)
+
+                    if (diceModeChosen == getString(R.string.spots_nearby)) {
                         nearbySpotsDisplay(true, 10)
                         dialogBtnAgain.setOnClickListener {
                             nearbySpotsDisplay(true, 10)
                             dialogBtnAgain.visibility = View.GONE
                             loadingDiceOutput.visibility = View.VISIBLE
                         }
-                    } else if (diceModeChosen.equals(getString(R.string.closest_25_spots))) {
+                    } else if (diceModeChosen == getString(R.string.closest_25_spots)) {
                         nearbySpotsDisplay(true, 25)
                         dialogBtnAgain.setOnClickListener {
                             nearbySpotsDisplay(true, 25)
                             dialogBtnAgain.visibility = View.GONE
                             loadingDiceOutput.visibility = View.VISIBLE
                         }
-                    } else if (diceModeChosen.equals(getString(R.string.favorite_spots))) {
+                    } else if (diceModeChosen == getString(R.string.favorite_spots)) {
                         favoriteSpotsDisplay(true)
                         dialogBtnAgain.setOnClickListener {
                             favoriteSpotsDisplay(true)
@@ -824,19 +927,269 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
 
             diceModeChosen = ""
             dialogDice.show()
+            val window = dialogDice.window
+            val lp = WindowManager.LayoutParams()
+            lp.copyFrom(dialogDice.window!!.attributes)
+            lp.width = WindowManager.LayoutParams.MATCH_PARENT
+            lp.height = WindowManager.LayoutParams.WRAP_CONTENT
+            window!!.attributes = lp
         }
+
+
+        feedbackButton = findViewById(R.id.feedback_button)
+        feedbackButton.setOnClickListener {
+            clearSearchViewQuery()
+            closeAllBottomTabs()
+            val dialogFeedback = Dialog(this)
+            dialogFeedback.requestWindowFeature(Window.FEATURE_NO_TITLE)
+            dialogFeedback.setCancelable(true)
+            dialogFeedback.setContentView(R.layout.dialog_feedback)
+            dialogFeedback.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            val feedbackEditTextFeedback = dialogFeedback.findViewById<EditText>(R.id.feedback_edit_text)
+            val feedbackErrorMessage = dialogFeedback.findViewById<TextView>(R.id.feedback_error_message)
+            val feedbackSendButton = dialogFeedback.findViewById<AppCompatButton>(R.id.send_button)
+            val feedbackLoading = dialogFeedback.findViewById<ProgressBar>(R.id.loading_feedback)
+
+            if (pref.getBoolean("NightRideMode", false)) {
+                dialogFeedback.findViewById<TextView>(R.id.feedback_description).setTextColor(getColor(R.color.lighter_grey))
+                dialogFeedback.findViewById<CardView>(R.id.main_background_feedback_dialog).setBackgroundResource(R.drawable.round_back_dark_20)
+                feedbackEditTextFeedback.setTextColor(getColor(R.color.lighter_grey))
+            }
+
+            feedbackEditTextFeedback.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // This method is called before the text is changed.
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    // This method is called when the text is changed. You can perform actions here.
+                    feedbackErrorMessage.visibility = View.GONE
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // This method is called after the text is changed.
+                }
+            })
+
+            feedbackSendButton.setOnClickListener {
+                feedbackErrorMessage.setTextColor(getColor(R.color.red))
+                val query = feedbackEditTextFeedback.text.toString()
+                if (query.isEmpty()) {
+                    feedbackErrorMessage.text = getString(R.string.field_cannot_be_empty)
+                    feedbackErrorMessage.visibility = View.VISIBLE
+                } else {
+                    feedbackSendButton.text = ""
+                    feedbackLoading.visibility = View.VISIBLE
+                    val data = hashMapOf("message" to query)
+                    db.collection("Feedback").document("${System.currentTimeMillis()}_${UUID.randomUUID()}")
+                        .set(data).addOnSuccessListener {
+                            feedbackSendButton.text = getString(R.string.send)
+                            feedbackLoading.visibility = View.GONE
+                            feedbackErrorMessage.setTextColor(getColor(R.color.green))
+                            feedbackErrorMessage.text = getString(R.string.message_sent)
+                            feedbackErrorMessage.visibility = View.VISIBLE
+                        }.addOnFailureListener {
+                            feedbackErrorMessage.text = getString(R.string.message_error)
+                            feedbackButton.text = getString(R.string.send)
+                            feedbackLoading.visibility = View.GONE
+                            feedbackErrorMessage.visibility = View.VISIBLE
+                        }
+                }
+            }
+            dialogFeedback.show()
+        }
+
+        settingsButton = findViewById<MaterialButton>(R.id.settings_button)
+        settingsButton.setOnClickListener {
+            startActivity(Intent(this@MapsActivity, SettingsActivity::class.java))
+        }
+
+
+        /*val easterLocationArray = arrayListOf<Point>()
+        val easterTitleArray = arrayListOf<String>()
+        db.collection("EasterSpots").get().addOnSuccessListener { documents ->
+            for (document in documents) {
+                easterLocationArray.add(Point(document.get("latitude").toString().toDouble(), document.get("longitude").toString().toDouble()))
+                easterTitleArray.add(document.get("title").toString())
+            }
+        }
+
+        val easterPlacemarkMapObjectArray = arrayListOf<PlacemarkMapObject>()
+        mapView!!.map.addCameraListener { map: Map, cameraPosition: CameraPosition, cameraUpdateReason: CameraUpdateReason, b: Boolean ->
+            // Check the zoom level and update marker visibility
+            val zoomLevel = cameraPosition.zoom
+            if (zoomLevel >= 15f) {
+                for (i in 0 until easterLocationArray.size) {
+                    val marker = createBitmapFromVector(R.drawable.easter_egg_spot_mark, 40F, 40F)
+                    mapObjectCollection =
+                        mapView?.map!!.mapObjects // Инициализируем коллекцию различных объектов на карте
+                    placemarkMapObject =
+                        mapObjectCollection.addPlacemark(easterLocationArray[i], ImageProvider.fromBitmap(marker))
+                    easterPlacemarkMapObjectArray.add(placemarkMapObject)
+
+                    mapObjectTapListener = object : MapObjectTapListener {
+                        override fun onMapObjectTap(mapObject: MapObject, point: Point): Boolean {
+                            clearSearchViewQuery()
+                            spotLinkConstraintLayout.visibility = View.VISIBLE
+                            spotLinkTitle.setText(easterTitleArray[i])
+
+                            val showSpotDetailesTV =
+                                findViewById<TextView>(R.id.show_spot_details_textview)
+                            showSpotDetailesTV.setText(getString(R.string.go_to_spot_info))
+
+                            if (pref.getBoolean("Translation", false)) {
+                                var correctLanguageCode = ""
+                                for (c in easterTitleArray[i].toCharArray()) {
+                                    if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.BASIC_LATIN) {
+                                        correctLanguageCode = "en"
+                                        break
+                                    }
+                                }
+                                if (correctLanguageCode.isEmpty()) {
+                                    correctLanguageCode = ""
+                                    for (c in easterTitleArray[i].toCharArray()) {
+                                        if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CYRILLIC) {
+                                            correctLanguageCode = "ru"
+                                            break
+                                        }
+                                    }
+                                }
+
+                                if (!correctLanguageCode.isEmpty()) {
+                                    showSpotDetailesTV.setText(getString(R.string.translator_initialization))
+                                    val options = TranslatorOptions.Builder()
+                                        .setSourceLanguage("ru")
+                                        .setTargetLanguage(Locale.getDefault().language)
+                                        .build()
+
+                                    val translator = Translation.getClient(options)
+                                    translator.downloadModelIfNeeded(conditions)
+                                        .addOnSuccessListener {
+                                            showSpotDetailesTV.setText(getString(R.string.translating))
+                                            translator.translate(easterTitleArray[i]).addOnSuccessListener {
+                                                showSpotDetailesTV.setText(getString(R.string.go_to_spot_info))
+                                                spotLinkTitle.setText(it)
+                                            }.addOnFailureListener {
+                                                Toast.makeText(
+                                                    this@MapsActivity,
+                                                    getString(R.string.error_translating),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                showSpotDetailesTV.setText(getString(R.string.go_to_spot_info))
+                                            }
+                                        }.addOnFailureListener {
+                                        Toast.makeText(
+                                            this@MapsActivity,
+                                            getString(R.string.error_downloading_model),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        showSpotDetailesTV.setText(getString(R.string.go_to_spot_info))
+                                    }.addOnCanceledListener {
+                                        val backgroundModelDownload = Thread(Runnable {
+                                            translator.downloadModelIfNeeded(conditions)
+                                        })
+                                        backgroundModelDownload.start()
+                                    }
+                                }
+                            }
+
+                            closeAllBottomTabs()
+
+                            spotLinkConstraintLayout.setOnClickListener {
+                                val intent =
+                                    Intent(this@MapsActivity, SpotReviewActivity::class.java)
+                                intent.putExtra("title", title)
+                                intent.putExtra("latitude", easterLocationArray[i].latitude.toString())
+                                intent.putExtra("longitude", easterLocationArray[i].longitude.toString())
+                                intent.putExtra("type", "Пасхалка")
+                                startActivity(intent)
+                            }
+
+                            return true
+                        }
+                    }
+//                    mapObjectTapListenerPointlessArray.add(mapObjectTapListener)
+                }
+            } else {
+                for (i in 0 until easterPlacemarkMapObjectArray.size) {
+                    mapObjectCollection =
+                        mapView?.map!!.mapObjects // Инициализируем коллекцию различных объектов на карте
+                    mapObjectCollection.remove(easterPlacemarkMapObjectArray[i])
+                }
+            }
+        }*/
+
+
+        /*val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+            if (user == null) {
+                // User is not signed in or the account is not verified
+                // You can sign out the user here
+                auth.signOut()
+                // Redirect the user to the sign-in screen or perform any other actions
+            }
+        }
+        auth.addAuthStateListener(authStateListener)*/
+
+        //Account validity check:
+        if (auth.currentUser != null) {
+            db.collection("Users").document(auth.currentUser!!.uid).get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val documentSnapshot = task.result
+                        // If the document exists, documentSnapshot will not be null
+                        val exists = documentSnapshot != null && documentSnapshot.exists()
+                        if (!exists) {
+                            Toast.makeText(
+                                this@MapsActivity,
+                                getString(R.string.account_deleted),
+                                Toast.LENGTH_LONG
+                            ).show()
+                            auth.signOut()
+                        }
+                    }
+                }
+        }
+
     }
 
 
     private fun favoriteSpotsDisplay(fromDiceModeDialog: Boolean) {
-        if (FirebaseAuth.getInstance().currentUser == null) {
-            dialogBtnConfirm.visibility = View.VISIBLE
-            loadingDice.visibility = View.GONE
-            dialogBtnAgain.visibility = View.VISIBLE
-            loadingDiceOutput.visibility = View.GONE
+        val youNeedToSignInToFavorites =
+            findViewById<TextView>(R.id.you_need_to_sign_in_for_favorites)
+        val goToSignInBtnFavorites =
+            findViewById<AppCompatButton>(R.id.go_to_signin_button_favorites)
+        goToSignInBtnFavorites.visibility = View.GONE
+        youNeedToSignInToFavorites.visibility = View.GONE
+        val slideUpAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_up_anim)
 
-            googleSignInDialogDismiss = true
-            googleSignInDialogShowup(true)
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            if (fromDiceModeDialog) {
+                dialogBtnConfirm.visibility = View.VISIBLE
+                loadingDice.visibility = View.GONE
+                dialogBtnAgain.visibility = View.VISIBLE
+                loadingDiceOutput.visibility = View.GONE
+                Toast.makeText(this@MapsActivity, getString(R.string.you_need_to_sign_in_to_favorites), Toast.LENGTH_SHORT).show()
+            } else {
+                googleSignInDialogDismiss = true
+                youNeedToSignInToFavorites.visibility = View.VISIBLE
+                goToSignInBtnFavorites.visibility = View.VISIBLE
+                goToSignInBtnFavorites.setOnClickListener {
+                    signInDialogShowup()
+                }
+                favoriteSpotsIcon.setColorFilter(coolTealColor)
+                bottomSheetDialogFavorites.visibility =
+                    View.VISIBLE
+                bottomSheetDialogFavorites.startAnimation(slideUpAnimation)
+                zoomFab.visibility = View.GONE
+                spotLinkConstraintLayout.visibility = View.GONE
+                favoriteSpotsIconPressed = true
+            }
         } else {
             lateinit var recyclerView: RecyclerView
             lateinit var recyclerViewDice: RecyclerView
@@ -845,7 +1198,6 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                 favoriteSpotsIcon.setColorFilter(coolTealColor)
                 bottomSheetDialogFavorites.visibility =
                     View.VISIBLE
-                val slideUpAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_up_anim)
                 bottomSheetDialogFavorites.startAnimation(slideUpAnimation)
                 zoomFab.visibility = View.GONE
                 spotLinkConstraintLayout.visibility = View.GONE
@@ -853,9 +1205,9 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
 
                 recyclerView = findViewById(R.id.favorite_spots_recycler_view)
             } else {
-                recyclerViewDice = dialogDice.findViewById<RecyclerView>(R.id.dice_recycler_view)
+                recyclerViewDice = dialogDice.findViewById(R.id.dice_recycler_view)
             }
-            val adapter = FavoriteSpotsAdapter { clickedItem ->
+            val adapter = FavoriteSpotsAdapter(this, pref.getBoolean("Translation", false), pref.getBoolean("NightRideMode", false)) { clickedItem ->
                 // Handle the item click here
                 val reviewIntent = Intent(this@MapsActivity, SpotReviewActivity::class.java)
                 reviewIntent.putExtra("latitude", clickedItem.latitude)
@@ -888,9 +1240,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                         val longitude = document.getDouble("longitude") ?: 0.0
                         val type = document.getString("type") ?: ""
 
-                        // Determine the correct icon based on the "type" field
-
-                        favoriteSpots.add(FavoriteSpot(title, latitude, longitude, type))
+                        favoriteSpots.add(FavoriteSpot(title, latitude, longitude, type, ""))
                     }
 
                     if (!fromDiceModeDialog) {
@@ -918,10 +1268,12 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                             dialogDiceOutputLayout.visibility = View.VISIBLE
                             adapter.setData(oneFavoriteSpotList)
                         }
-                        dialogBtnConfirm.visibility = View.VISIBLE
-                        loadingDice.visibility = View.GONE
-                        dialogBtnAgain.visibility = View.VISIBLE
-                        loadingDiceOutput.visibility = View.GONE
+                        if (fromDiceModeDialog) {
+                            dialogBtnConfirm.visibility = View.VISIBLE
+                            loadingDice.visibility = View.GONE
+                            dialogBtnAgain.visibility = View.VISIBLE
+                            loadingDiceOutput.visibility = View.GONE
+                        }
                     }
 
                     // Update the RecyclerView adapter with the data
@@ -935,7 +1287,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
 
 
     private fun nearbySpotsDisplay(fromDiceModeDialog: Boolean, quantity: Int) {
-        val adapter = NearbySpotsAdapter { clickedItem ->
+        val adapter = NearbySpotsAdapter(this@MapsActivity, pref.getBoolean("NightRideMode", false)) { clickedItem ->
             // Handle the item click here
             val reviewIntent = Intent(this@MapsActivity, SpotReviewActivity::class.java)
             reviewIntent.putExtra("latitude", clickedItem.latitude)
@@ -1106,30 +1458,485 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
     }
 
 
-    private fun googleSignInDialogShowup(favoriteSpotsClicked: Boolean) {
-        dialogGoogleSignIn = Dialog(this)
-        dialogGoogleSignIn.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialogGoogleSignIn.setCancelable(true)
-        dialogGoogleSignIn.setContentView(R.layout.dialog_google_sign_in)
-        if (favoriteSpotsClicked) {
-            dialogGoogleSignIn.findViewById<TextView>(R.id.dialog_content)
-                .setText(getString(R.string.you_need_to_sign_in_to_favorites))
-        }
-        dialogGoogleSignIn.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        val dialogGoogleSignInBtn =
-            dialogGoogleSignIn.findViewById<MaterialButton>(R.id.google_sign_in_button)
-        dialogGoogleSignInBtn.setOnClickListener {
+    private fun signInDialogShowup() {
+        closeAllBottomTabs()
+        zoomFab.visibility = View.VISIBLE
+
+        onLeftTab = true
+        dialogSignIn = Dialog(this)
+        dialogSignIn.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialogSignIn.setCancelable(true)
+        dialogSignIn.setContentView(R.layout.dialog_signin)
+        dialogSignIn.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        val dialogLoginButton =
+            dialogSignIn.findViewById<AppCompatButton>(R.id.login_button)
+        val dialogSignUpButton = dialogSignIn.findViewById<AppCompatButton>(R.id.sign_up_button)
+
+        val nightRideModeOn = pref.getBoolean("NightRideMode", false)
+
+        dialogLoginButton.setOnClickListener {
             auth = FirebaseAuth.getInstance()
-            val options =
-                GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(getString(R.string.default_web_client_id))
-                    .requestEmail()
-                    .build()
-            var client = GoogleSignIn.getClient(this, options)
-            val intent = client.signInIntent
-            signInLauncher.launch(intent)
+            val emailField = dialogSignIn.findViewById<EditText>(R.id.login_email)
+            val passwordField = dialogSignIn.findViewById<EditText>(R.id.login_password)
+            val loginErrorMessage = dialogSignIn.findViewById<TextView>(R.id.login_error_message)
+
+            val emailQuery = emailField.text.toString()
+            val passwordQuery = passwordField.text.toString()
+
+            emailField.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // This method is called before the text is changed.
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    // This method is called when the text is changed. You can perform actions here.
+                    loginErrorMessage.setText("")
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // This method is called after the text is changed.
+                }
+            })
+
+            passwordField.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // This method is called before the text is changed.
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    // This method is called when the text is changed. You can perform actions here.
+                    loginErrorMessage.setText("")
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // This method is called after the text is changed.
+                }
+            })
+
+            if (emailQuery.isEmpty() || passwordQuery.isEmpty())
+                loginErrorMessage.setText(getString(R.string.all_fields_are_compulsory))
+            else {
+                val loadingLogin = dialogSignIn.findViewById<ProgressBar>(R.id.loading_login)
+                loadingLogin.visibility = View.VISIBLE
+                dialogLoginButton.setText("")
+
+                //Signing the user in:
+                auth.signInWithEmailAndPassword(emailQuery, passwordQuery)
+                    .addOnCompleteListener(
+                        { task: Task<AuthResult?> ->
+                            if (task.isSuccessful) {
+                                val user = FirebaseAuth.getInstance().currentUser
+                                if (user != null) {
+                                    if (user.isEmailVerified) {
+                                        dialogSignIn.dismiss()
+                                        zoomFab.visibility = View.VISIBLE
+                                        db.collection("Users").document(auth.currentUser!!.uid).get()
+                                            .addOnSuccessListener { document ->
+                                                if (document.get("username") == null || document.get("username")
+                                                        .toString().isEmpty()
+                                                ) {
+                                                    dialogUsernameSetUp(false)
+                                                } else {
+                                                    Toast.makeText(this@MapsActivity, getString(R.string.login_completed) + document.get("username").toString(), Toast.LENGTH_SHORT).show()
+                                                }
+                                            }.addOnFailureListener {
+                                                Toast.makeText(this@MapsActivity, getString(R.string.username_check_error), Toast.LENGTH_SHORT).show()
+                                            }
+                                    } else {
+                                        user.sendEmailVerification()
+                                            .addOnCompleteListener {
+                                                loadingLogin.setVisibility(View.GONE)
+                                                loginErrorMessage.setText(getString(R.string.you_need_to_verify_email))
+                                                dialogLoginButton.setText(getString(R.string.sign_in))
+                                            }
+                                    }
+                                }
+                            } else {
+                                loadingLogin.setVisibility(View.GONE)
+                                loginErrorMessage.setText(getString(R.string.login_error))
+                                dialogLoginButton.setText(getString(R.string.sign_in))
+                            }
+                        })
+            }
+
         }
-        dialogGoogleSignIn.show()
+
+        val dialogLoginTabTitle = dialogSignIn.findViewById<TextView>(R.id.signin_tab_title)
+        val dialogSignUpTabTitle = dialogSignIn.findViewById<TextView>(R.id.signup_tab_title)
+
+        val dialogLoginTab = dialogSignIn.findViewById<LinearLayout>(R.id.signin_tab)
+        val dialogSignupTab = dialogSignIn.findViewById<LinearLayout>(R.id.signup_tab)
+
+        val slideLeftInAnimation =
+            AnimationUtils.loadAnimation(baseContext, R.anim.slide_left_in_anim)
+        val slideLeftOutAnimation =
+            AnimationUtils.loadAnimation(baseContext, R.anim.slide_left_out_anim)
+        val slideRightInAnimation =
+            AnimationUtils.loadAnimation(baseContext, R.anim.slide_right_in_anim)
+        val slideRightOutAnimation =
+            AnimationUtils.loadAnimation(baseContext, R.anim.slide_right_out_anim)
+
+        val signinTabTitleStr: String = getString(R.string.signin)
+        val signInContentTab = SpannableString(signinTabTitleStr)
+        signInContentTab.setSpan(UnderlineSpan(), 0, signinTabTitleStr.length, 0)
+
+        val signUpTabTitleStr: String = getString(R.string.signup)
+        val signUpContentTab = SpannableString(signUpTabTitleStr)
+        signUpContentTab.setSpan(UnderlineSpan(), 0, signUpTabTitleStr.length, 0)
+
+
+        if (nightRideModeOn) {
+            val colorSpan = ForegroundColorSpan(getColor(R.color.light_grey))
+            dialogSignIn.findViewById<CardView>(R.id.main_background_signin_dialog).setBackgroundResource(R.drawable.round_back_dark_20)
+            val loginEmailEditText = dialogSignIn.findViewById<EditText>(R.id.login_email)
+            loginEmailEditText.setTextColor(getColor(R.color.lighter_grey))
+            loginEmailEditText.setBackgroundResource(R.drawable.round_back_dark_lighter_20)
+            val loginPasswordEditText = dialogSignIn.findViewById<EditText>(R.id.login_password)
+            loginPasswordEditText.setTextColor(getColor(R.color.lighter_grey))
+            loginPasswordEditText.setBackgroundResource(R.drawable.round_back_dark_lighter_20)
+            val signUpEmailEditText = dialogSignIn.findViewById<EditText>(R.id.signup_email)
+            signUpEmailEditText.setTextColor(getColor(R.color.lighter_grey))
+            signUpEmailEditText.setBackgroundResource(R.drawable.round_back_dark_lighter_20)
+            val signUpPasswordEditText = dialogSignIn.findViewById<EditText>(R.id.signup_password)
+            signUpPasswordEditText.setTextColor(getColor(R.color.lighter_grey))
+            signUpPasswordEditText.setBackgroundResource(R.drawable.round_back_dark_lighter_20)
+            val signUpConfirmPasswordEditText = dialogSignIn.findViewById<EditText>(R.id.signup_confirm_password)
+            signUpConfirmPasswordEditText.setTextColor(getColor(R.color.lighter_grey))
+            signUpConfirmPasswordEditText.setBackgroundResource(R.drawable.round_back_dark_lighter_20)
+            dialogLoginTabTitle.setTextColor(coolTealColor)
+        }
+
+
+        dialogLoginTabTitle.setText(signInContentTab)
+
+        dialogLoginTabTitle.setOnClickListener {
+            if (!onLeftTab) {
+                dialogLoginTabTitle.setText(signInContentTab)
+                dialogSignUpTabTitle.setText(signUpTabTitleStr)
+                if (nightRideModeOn)
+                    dialogLoginTabTitle.setTextColor(getColor(R.color.cool_teal))
+                else
+                    dialogLoginTabTitle.setTextColor(getColor(R.color.black))
+                dialogSignUpTabTitle.setTextColor(getColor(R.color.light_grey))
+                dialogSignupTab.startAnimation(slideRightOutAnimation)
+                dialogLoginTab.visibility = View.VISIBLE
+                dialogLoginTab.startAnimation(slideRightInAnimation)
+                dialogSignupTab.visibility = View.GONE
+            }
+            onLeftTab = true
+        }
+
+        dialogSignUpTabTitle.setOnClickListener {
+            if (onLeftTab) {
+                dialogSignUpTabTitle.setText(signUpContentTab)
+                dialogLoginTabTitle.setText(signinTabTitleStr)
+                dialogLoginTabTitle.setTextColor(getColor(R.color.light_grey))
+                if (nightRideModeOn)
+                    dialogSignUpTabTitle.setTextColor(getColor(R.color.cool_teal))
+                else
+                    dialogSignUpTabTitle.setTextColor(getColor(R.color.black))
+                dialogLoginTab.startAnimation(slideLeftOutAnimation)
+                dialogSignupTab.visibility = View.VISIBLE
+                dialogSignupTab.startAnimation(slideLeftInAnimation)
+                dialogLoginTab.visibility = View.GONE
+            }
+            onLeftTab = false
+        }
+
+        dialogSignUpButton.setOnClickListener {
+            val signUpEmailField = dialogSignIn.findViewById<EditText>(R.id.signup_email)
+            val signUpPasswordField = dialogSignIn.findViewById<EditText>(R.id.signup_password)
+            val signUpConfirmPasswordField =
+                dialogSignIn.findViewById<EditText>(R.id.signup_confirm_password)
+
+            val emailQuery = signUpEmailField.text.toString()
+            val passwordQuery = signUpPasswordField.text.toString()
+            val confirmPasswordQuery = signUpConfirmPasswordField.text.toString()
+
+            val signUpErrorMessage = dialogSignIn.findViewById<TextView>(R.id.sign_up_error_message)
+            signUpErrorMessage.setTextColor(getColor(R.color.red))
+
+            //Edit text query change listeners:
+            signUpEmailField.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // This method is called before the text is changed.
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    // This method is called when the text is changed. You can perform actions here.
+                    signUpErrorMessage.setText("")
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // This method is called after the text is changed.
+                }
+            })
+
+            signUpPasswordField.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // This method is called before the text is changed.
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    // This method is called when the text is changed. You can perform actions here.
+                    signUpErrorMessage.setText("")
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // This method is called after the text is changed.
+                }
+            })
+
+            signUpConfirmPasswordField.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // This method is called before the text is changed.
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    // This method is called when the text is changed. You can perform actions here.
+                    signUpErrorMessage.setText("")
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // This method is called after the text is changed.
+                }
+            })
+
+
+            //Password check:
+            if (emailQuery.isEmpty() || passwordQuery.isEmpty() || confirmPasswordQuery.isEmpty())
+                signUpErrorMessage.setText(getString(R.string.all_fields_are_compulsory))
+            else {
+                if (!passwordQuery.equals(confirmPasswordQuery)) {
+                    signUpErrorMessage.setText(getString(R.string.passwords_dont_match))
+                } else {
+                    var passwordCyrillicFound = false
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        passwordCyrillicFound = passwordQuery.chars()
+                            .mapToObj<UCharacter.UnicodeBlock>({ ch: Int ->
+                                UCharacter.UnicodeBlock.of(
+                                    ch
+                                )
+                            })
+                            .anyMatch({ b: UCharacter.UnicodeBlock -> b == UCharacter.UnicodeBlock.CYRILLIC })
+                    }
+
+                    var passwordNoNumbersFound = true
+                    for (i in 0 until passwordQuery.length) {
+                        if (Character.isDigit(passwordQuery.get(i))) {
+                            passwordNoNumbersFound = false
+                            break
+                        }
+                    }
+
+                    var passwordDoesntContainLetters = true
+                    for (i in 0 until passwordQuery.length) {
+                        if (Character.isLetter(passwordQuery.get(i))) {
+                            passwordDoesntContainLetters = false
+                            break
+                        }
+                    }
+
+                    val passwordWrongLength: Boolean = passwordQuery.length < 7
+
+                    if (passwordCyrillicFound || passwordNoNumbersFound || passwordDoesntContainLetters || passwordWrongLength) {
+                        signUpErrorMessage.setText(getString(R.string.password_restrictions))
+                    } else {
+                        val loadingSignUp =
+                            dialogSignIn.findViewById<ProgressBar>(R.id.loading_sign_up)
+                        loadingSignUp.visibility = View.VISIBLE
+                        //show loading
+                        dialogSignUpButton.setText("")
+                        //Works pretty slow, so that further code starts working without isLoginTaken change
+
+                        //Email availability check:
+                        val isEmailTaken = booleanArrayOf(false)
+                        db.collection("Users").get()
+                            .addOnCompleteListener({ task11: Task<QuerySnapshot> ->
+                                if (task11.isSuccessful) {
+                                    for (document in task11.result) {
+                                        if (document["email"] == emailQuery) {
+                                            isEmailTaken[0] = true
+                                            loadingSignUp.setVisibility(View.GONE)
+                                            dialogSignUpButton.setText(getString(R.string.sign_up))
+                                            signUpErrorMessage.setText(getString(R.string.email_taken))
+                                        }
+                                    }
+                                }
+                                if (!isEmailTaken[0]) {
+                                    if (!isEmailTaken[0]) {
+                                        auth.createUserWithEmailAndPassword(
+                                            emailQuery,
+                                            passwordQuery
+                                        ).addOnCompleteListener(
+                                            OnCompleteListener { task1111: Task<AuthResult?> ->
+                                                if (task1111.isSuccessful) {
+                                                    val user = hashMapOf(
+                                                        "email" to emailQuery
+                                                    )
+                                                    db.collection("Users")
+                                                        .document(FirebaseAuth.getInstance().currentUser!!.uid)
+                                                        .set(user)
+                                                        .addOnSuccessListener(
+                                                            OnSuccessListener { documentReference: Void? -> sendEmailVerification() })
+                                                        .addOnFailureListener(OnFailureListener { e: Exception? ->
+                                                            dialogSignUpButton.setText(getString(R.string.sign_up))
+                                                            signUpErrorMessage.setText(getString(R.string.signup_error))
+                                                            loadingSignUp.setVisibility(View.GONE)
+                                                        })
+                                                } else {
+                                                    dialogSignUpButton.setText(getString(R.string.sign_up))
+                                                    signUpErrorMessage.setText(getString(R.string.signup_error))
+                                                    loadingSignUp.setVisibility(View.GONE)
+                                                }
+                                            })
+                                    }
+                                }
+                            })
+                    }
+                }
+            }
+
+        }
+
+        val forgotPasswordClickable = dialogSignIn.findViewById<TextView>(R.id.forgot_password_clickable)
+        val forgotPasswordSpannable: Spannable =
+            SpannableString(forgotPasswordClickable.text.toString())
+        val clickSpan: ClickableSpan = object : ClickableSpan() {
+            override fun updateDrawState(ds: TextPaint) {
+                super.updateDrawState(ds)
+                ds.isUnderlineText = true
+                if (nightRideModeOn)
+                    ds.color = getColor(R.color.light_grey)
+                else
+                    ds.color = getColor(R.color.black)
+            }
+
+            override fun onClick(view: View) {
+                val emailField = dialogSignIn.findViewById<EditText>(R.id.login_email)
+                val emailQuery = emailField.text.toString()
+                val loginErrorMessage = dialogSignIn.findViewById<TextView>(R.id.login_error_message)
+
+                emailField.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(
+                        s: CharSequence?,
+                        start: Int,
+                        count: Int,
+                        after: Int
+                    ) {
+                        // This method is called before the text is changed.
+                    }
+
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        // This method is called when the text is changed. You can perform actions here.
+                        loginErrorMessage.setText("")
+                    }
+
+                    override fun afterTextChanged(s: Editable?) {
+                        // This method is called after the text is changed.
+                    }
+                })
+
+                if (emailQuery.isEmpty())
+                    loginErrorMessage.setText(getString(R.string.enter_email))
+                else {
+                    loginErrorMessage.setTextColor(getColor(R.color.red))
+                    val loadingForgotPassword = dialogSignIn.findViewById<ProgressBar>(R.id.loading_forgot_password)
+                    loadingForgotPassword.visibility = View.VISIBLE
+                    forgotPasswordClickable.visibility = View.GONE
+                    // Perform the query asynchronously
+                    val queryTask = db.collection("Users").get()
+
+                    queryTask.addOnSuccessListener { documents ->
+                        var emailExists = false
+
+                        for (document in documents) {
+                            if (document.getString("email") == emailQuery) {
+                                emailExists = true
+                                break
+                            }
+                        }
+
+                        if (emailExists) {
+                            auth.sendPasswordResetEmail(emailQuery)
+                                .addOnCompleteListener { task ->
+                                    loadingForgotPassword.setVisibility(View.GONE)
+                                    forgotPasswordClickable.visibility = View.VISIBLE
+                                    if (task.isSuccessful) {
+                                        loginErrorMessage.setText(getString(R.string.recovery_sent))
+                                        loginErrorMessage.setTextColor(getColor(R.color.green))
+                                    } else {
+                                        loginErrorMessage.setText(getString(R.string.error_occurred))
+                                    }
+                                }
+                        } else {
+                            loadingForgotPassword.setVisibility(View.GONE)
+                            forgotPasswordClickable.visibility = View.VISIBLE
+                            loginErrorMessage.setText(getString(R.string.password_reset_invalid_email))
+                        }
+                    }
+
+                }
+            }
+        }
+        forgotPasswordSpannable.setSpan(
+            clickSpan,
+            0,
+            getString(R.string.forgot_password).length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        forgotPasswordClickable.setText(forgotPasswordSpannable, TextView.BufferType.SPANNABLE)
+        forgotPasswordClickable.movementMethod = LinkMovementMethod.getInstance()
+
+
+        dialogSignIn.show()
+        val window = dialogSignIn.window
+        val lp = WindowManager.LayoutParams()
+        lp.copyFrom(dialogSignIn.window!!.attributes)
+        lp.width = WindowManager.LayoutParams.MATCH_PARENT
+        lp.height = WindowManager.LayoutParams.WRAP_CONTENT
+        window!!.attributes = lp
+    }
+
+    private fun sendEmailVerification() {
+        val firebaseUser: FirebaseUser = auth.getCurrentUser()!!
+        firebaseUser.sendEmailVerification().addOnCompleteListener { task: Task<Void?>? ->
+            val dialogSignUpButton = dialogSignIn.findViewById<AppCompatButton>(R.id.sign_up_button)
+            val dialogSignUpLoading = dialogSignIn.findViewById<ProgressBar>(R.id.loading_sign_up)
+            val dialogSignUpErrorMessage =
+                dialogSignIn.findViewById<TextView>(R.id.sign_up_error_message)
+            dialogSignUpButton.setText(getString(R.string.sign_up))
+            dialogSignUpErrorMessage.setText(getString(R.string.verification_sent))
+            dialogSignUpErrorMessage.setTextColor(getColor(R.color.green))
+            //add the password recovery email sent animation
+            auth.signOut()
+            dialogSignUpLoading.setVisibility(View.GONE)
+        }
     }
 
 
@@ -1146,6 +1953,15 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
         val mainLayout = dialog.findViewById<LinearLayout>(R.id.main_layout)
         val successLayout = dialog.findViewById<LinearLayout>(R.id.success_layout)
         val okBtn = dialog.findViewById<AppCompatButton>(R.id.button_ok)
+
+        if (pref.getBoolean("NightRideMode", false)) {
+            dialog.findViewById<TextView>(R.id.dialog_content).setTextColor(getColor(R.color.lighter_grey))
+            dialog.findViewById<CardView>(R.id.main_background_username_setup).setBackgroundResource(R.drawable.round_back_dark_20)
+            dialogUsernameField.setTextColor(getColor(R.color.lighter_grey))
+            dialogUsernameField.setBackgroundResource(R.drawable.round_back_dark_lighter_20)
+            dialog.findViewById<TextView>(R.id.success_text_view).setTextColor(getColor(R.color.lighter_grey))
+        }
+
         okBtn.setOnClickListener {
             dialog.dismiss()
             val i = Intent(this, MapsActivity::class.java)
@@ -1158,8 +1974,10 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                 dialogErrorMessage.text = getString(R.string.field_cannot_be_empty)
             } else if (dialogUsernameField.text.length > 20) {
                 dialogErrorMessage.text = getString(R.string.username_length_exceeded)
+            } else if (dialogUsernameField.text.toString().equals("?")) {
+                dialogErrorMessage.text = getString(R.string.username_cannot_be_question_mark)
             } else {
-                var usernameEntered = dialogUsernameField.text.toString()
+                val usernameEntered = dialogUsernameField.text.toString()
                 var usernameTaken = false
                 dialogBtnConfirm.visibility = View.GONE
                 dialogLoading.visibility = View.VISIBLE
@@ -1180,17 +1998,20 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                         Log.d("asasassin", "started adding data to firestore")
                         val data = hashMapOf("username" to usernameEntered)
                         if (changeSpotProponents) {
+                            Log.d("usernameChangeIssue", "Inside the changeSpotProponents if")
                             db.collection("Users").document(auth.currentUser!!.uid).get()
                                 .addOnSuccessListener { document ->
                                     val oldUsername = document.get("username").toString()
                                     db.collection("Users").document(auth.currentUser!!.uid)
                                         .update("username", usernameEntered)
                                         .addOnSuccessListener {
+                                            Log.d("usernameChangeIssue", "Username in Users changed successfully")
                                             if (usernameEntered != oldUsername) {
                                                 db.collection("Spots")
                                                     .whereEqualTo("proponent", oldUsername).get()
                                                     .addOnSuccessListener { documents ->
                                                         var updatesCount = 0
+                                                        Log.d("usernameChangeIssue", "Got in the Spots collection. Number of documents with old username: ${documents.size()}")
                                                         for (document in documents) {
                                                             db.collection("Spots")
                                                                 .document(document.id).update(
@@ -1198,6 +2019,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                                                                     usernameEntered
                                                                 )
                                                                 .addOnSuccessListener {
+                                                                    Log.d("usernameChangeIssue", "Username change in 1 Spots document")
                                                                     updatesCount++
                                                                     if (updatesCount == documents.size()) {
                                                                         // All updates are complete, update UI here
@@ -1218,7 +2040,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                                         }
                                 }
                         } else {
-                            db.collection("Users").document(auth.currentUser!!.uid).set(data)
+                            db.collection("Users").document(auth.currentUser!!.uid).update(data as kotlin.collections.Map<String, Any>)
                                 .addOnSuccessListener {
                                     mainLayout.visibility = View.GONE
                                     successLayout.visibility = View.VISIBLE
@@ -1234,7 +2056,7 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                         dialogBtnConfirm.visibility = View.GONE
                         dialogLoading.visibility = View.VISIBLE
                         val data = hashMapOf("username" to usernameEntered)
-                        db.collection("Users").document(auth.currentUser!!.uid).set(data)
+                        db.collection("Users").document(auth.currentUser!!.uid).update(data as kotlin.collections.Map<String, Any>)
                             .addOnSuccessListener {
                                 mainLayout.visibility = View.GONE
                                 successLayout.visibility = View.VISIBLE
@@ -1422,19 +2244,66 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
                 clearSearchViewQuery()
                 spotLinkConstraintLayout.visibility = View.VISIBLE
                 spotLinkTitle.setText(title)
-                zoomFab.visibility = View.GONE
-                addIconPressed = false
-                favoriteSpotsIconPressed = false
-                nearbySpotsIconPressed = false
-                codeOfConductIconPressed = false
-                accountIconPressed = false
-                addSpotIcon.setColorFilter(lightGreyColor)
-                nearbySpotsIcon.setColorFilter(lightGreyColor)
-                favoriteSpotsIcon.setColorFilter(lightGreyColor)
-                codeOfConductIcon.setColorFilter(lightGreyColor)
-                accountIcon.setColorFilter(lightGreyColor)
-                addSpotIcon.setColorFilter(lightGreyColor)
-                bottomSheetDialogLinearLayout.visibility = View.GONE
+
+                val showSpotDetailesTV = findViewById<TextView>(R.id.show_spot_details_textview)
+                showSpotDetailesTV.setText(getString(R.string.go_to_spot_info))
+
+                if (pref.getBoolean("Translation", false)) {
+                    var correctLanguageCode = ""
+                    for (c in title.toCharArray()) {
+                        if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.BASIC_LATIN) {
+                            correctLanguageCode = "en"
+                            break
+                        }
+                    }
+                    if (correctLanguageCode.isEmpty()) {
+                        correctLanguageCode = ""
+                        for (c in title.toCharArray()) {
+                            if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CYRILLIC) {
+                                correctLanguageCode = "ru"
+                                break
+                            }
+                        }
+                    }
+
+                    if (!correctLanguageCode.isEmpty()) {
+                        showSpotDetailesTV.setText(getString(R.string.translator_initialization))
+                        val options = TranslatorOptions.Builder()
+                            .setSourceLanguage("ru")
+                            .setTargetLanguage(Locale.getDefault().language)
+                            .build()
+
+                        val translator = Translation.getClient(options)
+                        translator.downloadModelIfNeeded(conditions).addOnSuccessListener {
+                            showSpotDetailesTV.setText(getString(R.string.translating))
+                            translator.translate(title).addOnSuccessListener {
+                                showSpotDetailesTV.setText(getString(R.string.go_to_spot_info))
+                                spotLinkTitle.setText(it)
+                            }.addOnFailureListener {
+                                Toast.makeText(
+                                    this@MapsActivity,
+                                    getString(R.string.error_translating),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                showSpotDetailesTV.setText(getString(R.string.go_to_spot_info))
+                            }
+                        }.addOnFailureListener {
+                            Toast.makeText(
+                                this@MapsActivity,
+                                getString(R.string.error_downloading_model),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            showSpotDetailesTV.setText(getString(R.string.go_to_spot_info))
+                        }.addOnCanceledListener {
+                            val backgroundModelDownload = Thread(Runnable {
+                                translator.downloadModelIfNeeded(conditions)
+                            })
+                            backgroundModelDownload.start()
+                        }
+                    }
+                }
+
+                closeAllBottomTabs()
 
                 spotLinkConstraintLayout.setOnClickListener {
                     val intent = Intent(this@MapsActivity, SpotReviewActivity::class.java)
@@ -1471,6 +2340,11 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
         zoomFab.visibility = View.VISIBLE
         spotLinkConstraintLayout.visibility = View.GONE
         spotLinkTitle.setText("")
+        closeAllBottomTabs()
+    }
+
+
+    private fun closeAllBottomTabs() {
         val slideDownAnimation =
             AnimationUtils.loadAnimation(baseContext, R.anim.slide_down_anim)
         if (favoriteSpotsIconPressed)
@@ -1498,6 +2372,148 @@ class MapsActivity : AppCompatActivity(), ActivityResultCaller, AdapterView.OnIt
         bottomSheetDialogLinearLayout.visibility = View.GONE
         bottomSheetDialogCodeOfConduct.visibility = View.GONE
         bottomSheetDialogAccount.visibility = View.GONE
+    }
+
+
+    /*fun setAppLocale(languageCode: String?) {
+        val locale = Locale(languageCode!!)
+        Locale.setDefault(locale)
+
+        val res: Resources = baseContext.getResources()
+        val config = Configuration(res.getConfiguration())
+        config.setLocale(locale);
+        res.updateConfiguration(config, res.getDisplayMetrics());
+    }*/
+
+
+    override fun onResume() {
+        super.onResume()
+        val nightRideMode = pref.getBoolean("NightRideMode", false)
+        if (nightRideMode) {
+            applyDarkTheme()
+        } else {
+            applyLightTheme()
+        }
+    }
+
+
+    private fun applyDarkTheme() {
+        mapView?.map?.isNightModeEnabled = true
+        diceBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme))
+        feedbackButton.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme))
+        settingsButton.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme))
+        zoomFab.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.dark_theme)))
+        iconsLinearLayout.setBackgroundResource(R.drawable.round_back_dark_20)
+        searchView.setBackgroundResource(R.drawable.round_back_dark_20)
+        val id = searchView.context.resources.getIdentifier("android:id/search_src_text", null, null)
+        val textView = searchView.findViewById<View>(id) as TextView
+        textView.setTextColor(getColor(R.color.lighter_grey))
+        searchOutputLinearLayout.setBackgroundResource(R.drawable.round_back_dark_20)
+        bottomSheetDialogFavorites.setBackgroundResource(R.drawable.round_back_dark_20)
+        bottomSheetDialogAccount.setBackgroundResource(R.drawable.round_back_dark_20)
+        bottomSheetDialogLinearLayout.setBackgroundResource(R.drawable.round_back_dark_20)
+        bottomSheetDialogNearby.setBackgroundResource(R.drawable.round_back_dark_20)
+        bottomSheetDialogCodeOfConduct.setBackgroundResource(R.drawable.round_back_dark_20)
+        findViewById<TextView>(R.id.bottom_sheet_dialog_title_favorites).setTextColor(getColor(R.color.lighter_grey))
+        findViewById<TextView>(R.id.bottom_sheet_dialog_title_nearby).setTextColor(getColor(R.color.lighter_grey))
+        findViewById<TextView>(R.id.bottom_sheet_dialog_title).setTextColor(getColor(R.color.lighter_grey))
+        findViewById<TextView>(R.id.bottom_sheet_dialog_title_account).setTextColor(getColor(R.color.lighter_grey))
+        findViewById<TextView>(R.id.code_of_conduct_title).setTextColor(getColor(R.color.lighter_grey))
+        findViewById<TextView>(R.id.code_1).setTextColor(getColor(R.color.lighter_grey))
+        findViewById<TextView>(R.id.code_2).setTextColor(getColor(R.color.lighter_grey))
+        loadingAccount.indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_white)
+        loadingNearby.indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_white)
+        findViewById<ProgressBar>(R.id.loading_favorites).indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_white)
+        addSpotBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme_lighter))
+        addSpotBtn.setTextColor(getColor(R.color.lighter_grey))
+        val signInBtn = findViewById<AppCompatButton>(R.id.google_sign_in_button_account)
+        signInBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme_lighter))
+        signInBtn.setTextColor(getColor(R.color.lighter_grey))
+        val usernameBtn = findViewById<MaterialButton>(R.id.username_button)
+        usernameBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme_lighter))
+        usernameBtn.setTextColor(getColor(R.color.lighter_grey))
+        val signOutBtn = findViewById<MaterialButton>(R.id.sign_out_button)
+        signOutBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme_lighter))
+        signOutBtn.setTextColor(getColor(R.color.lighter_grey))
+        val deleteAccountBtn = findViewById<MaterialButton>(R.id.delete_account_button)
+        deleteAccountBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme_lighter))
+        deleteAccountBtn.setTextColor(getColor(R.color.lighter_grey))
+        val signInAddSpotBtn = findViewById<AppCompatButton>(R.id.sign_in_dialog_open)
+        signInAddSpotBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme_lighter))
+        signInAddSpotBtn.setTextColor(getColor(R.color.lighter_grey))
+        val signInFavSpotBtn = findViewById<AppCompatButton>(R.id.go_to_signin_button_favorites)
+        signInFavSpotBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.dark_theme_lighter))
+        signInFavSpotBtn.setTextColor(getColor(R.color.lighter_grey))
+        findViewById<TextView>(R.id.spots_loading_textview).setTextColor(getColor(R.color.lighter_grey))
+        findViewById<ProgressBar>(R.id.loading_progress_bar).indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_white)
+        spotLinkConstraintLayout.setBackgroundResource(R.drawable.round_back_dark_20)
+        spotLinkTitle.setTextColor(getColor(R.color.lighter_grey))
+        findViewById<ImageButton>(R.id.cancel_spot_link_image_button).imageTintList = ColorStateList.valueOf(getColor(R.color.light_grey))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val window = window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            window.statusBarColor = ContextCompat.getColor(this, R.color.dark_theme)
+        }
+    }
+
+
+    private fun applyLightTheme() {
+        mapView?.map?.isNightModeEnabled = false
+        diceBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.white))
+        feedbackButton.backgroundTintList = ColorStateList.valueOf(getColor(R.color.white))
+        settingsButton.backgroundTintList = ColorStateList.valueOf(getColor(R.color.white))
+        zoomFab.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.white)))
+        iconsLinearLayout.setBackgroundResource(R.drawable.round_back_white_20)
+        searchView.setBackgroundResource(R.drawable.round_back_white_20)
+        val id = searchView.context.resources.getIdentifier("android:id/search_src_text", null, null)
+        val textView = searchView.findViewById<View>(id) as TextView
+        textView.setTextColor(getColor(R.color.black))
+        searchOutputLinearLayout.setBackgroundResource(R.drawable.round_back_white_20)
+        bottomSheetDialogFavorites.setBackgroundResource(R.drawable.round_back_white_20)
+        bottomSheetDialogAccount.setBackgroundResource(R.drawable.round_back_white_20)
+        bottomSheetDialogLinearLayout.setBackgroundResource(R.drawable.round_back_white_20)
+        bottomSheetDialogNearby.setBackgroundResource(R.drawable.round_back_white_20)
+        bottomSheetDialogCodeOfConduct.setBackgroundResource(R.drawable.round_back_white_20)
+        findViewById<TextView>(R.id.bottom_sheet_dialog_title_favorites).setTextColor(getColor(R.color.black))
+        findViewById<TextView>(R.id.bottom_sheet_dialog_title_nearby).setTextColor(getColor(R.color.black))
+        findViewById<TextView>(R.id.bottom_sheet_dialog_title).setTextColor(getColor(R.color.black))
+        findViewById<TextView>(R.id.bottom_sheet_dialog_title_account).setTextColor(getColor(R.color.black))
+        findViewById<TextView>(R.id.code_of_conduct_title).setTextColor(getColor(R.color.black))
+        findViewById<TextView>(R.id.code_1).setTextColor(getColor(R.color.black))
+        findViewById<TextView>(R.id.code_2).setTextColor(getColor(R.color.black))
+        loadingAccount.indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_black)
+        loadingNearby.indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_black)
+        findViewById<ProgressBar>(R.id.loading_favorites).indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_black)
+        addSpotBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.lighter_grey))
+        addSpotBtn.setTextColor(getColor(R.color.black))
+        val signInBtn = findViewById<AppCompatButton>(R.id.google_sign_in_button_account)
+        signInBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.lighter_grey))
+        signInBtn.setTextColor(getColor(R.color.black))
+        val usernameBtn = findViewById<MaterialButton>(R.id.username_button)
+        usernameBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.lighter_grey))
+        usernameBtn.setTextColor(getColor(R.color.black))
+        val signOutBtn = findViewById<MaterialButton>(R.id.sign_out_button)
+        signOutBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.lighter_grey))
+        signOutBtn.setTextColor(getColor(R.color.black))
+        val deleteAccountBtn = findViewById<MaterialButton>(R.id.delete_account_button)
+        deleteAccountBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.lighter_grey))
+        deleteAccountBtn.setTextColor(getColor(R.color.black))
+        val signInAddSpotBtn = findViewById<AppCompatButton>(R.id.sign_in_dialog_open)
+        signInAddSpotBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.lighter_grey))
+        signInAddSpotBtn.setTextColor(getColor(R.color.black))
+        val signInFavSpotBtn = findViewById<AppCompatButton>(R.id.go_to_signin_button_favorites)
+        signInFavSpotBtn.backgroundTintList = ColorStateList.valueOf(getColor(R.color.lighter_grey))
+        signInFavSpotBtn.setTextColor(getColor(R.color.black))
+        findViewById<TextView>(R.id.spots_loading_textview).setTextColor(getColor(R.color.black))
+        findViewById<ProgressBar>(R.id.loading_progress_bar).indeterminateDrawable = getDrawable(R.drawable.custom_progress_bar_black)
+        spotLinkConstraintLayout.setBackgroundResource(R.drawable.round_back_white_20)
+        spotLinkTitle.setTextColor(getColor(R.color.black))
+        findViewById<ImageButton>(R.id.cancel_spot_link_image_button).imageTintList = ColorStateList.valueOf(getColor(R.color.light_grey))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val window = window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            window.statusBarColor = ContextCompat.getColor(this, R.color.cool_teal)
+        }
     }
 
 

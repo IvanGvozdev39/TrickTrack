@@ -1,103 +1,152 @@
 <resources>
     <string name="app_name">TrickTrack</string>
     <string name="title_activity_maps">MapsActivity</string>
-    <string name="location_not_available">Данные о местоположении недоступны</string>
-    <string name="add_spot">Добавить спот</string>
-    <string name="spot_add">Добавление спота</string>
-    <string name="you_need_to_sign_in">Чтобы добавить спот или шоп на карту, необходимо авторизоваться</string>
-    <string name="sign_in_with_google">Войти с помощью Google</string>
-    <string name="sign_out">Выйти из аккаунта</string>
-    <string name="add_spot_button">Перейти к добавлению спота или шопа на карту</string>
-    <string name="title">Название</string>
-    <string name="description">Описание</string>
-    <string name="tap_on_map_to_add_marker">1/2 Нажмите на карту,\nчтобы добавить метку</string>
-    <string name="spot_info">2/2 Информация о споте</string>
-    <string name="skatepark">Открытый скейтпарк</string>
-    <string name="covered_skatepark">Крытый скейтпарк</string>
-    <string name="street_spot">Стрит</string>
+    <string name="location_not_available">Location data is not available</string>
+    <string name="add_spot">Add Spot</string>
+    <string name="spot_add">Spot Add</string>
+    <string name="you_need_to_sign_in">You need to log in to add spots or shops to the map</string>
+    <string name="sign_in">Log in</string>
+    <string name="sign_in_or_sign_up">Log in or sign up</string>
+    <string name="sign_up">Sign up</string>
+    <string name="email">E-mail</string>
+    <string name="password">Password</string>
+    <string name="repeat_password">Confirm password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="no_account">No account yet? Sign up</string>
+    <string name="signin">Login</string>
+    <string name="signup">Sign-up</string>
+    <string name="sign_out">Log out</string>
+    <string name="add_spot_button">Add a spot or a shop to the map</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="tap_on_map_to_add_marker">1/2 Tap on the map\n to add a marker</string>
+    <string name="spot_info">2/2 Spot info</string>
+    <string name="skatepark">Outdoor skatepark</string>
+    <string name="covered_skatepark">Indoor skatepark</string>
+    <string name="street_spot">Street</string>
     <string name="diy_spot">D.I.Y</string>
     <string name="dirt">Dirt</string>
-    <string name="shop">Шоп</string>
-    <string name="choose_spot_type">Выберите тип спота</string>
-    <string name="choose_spot_condition">Выберите состояние спота</string>
-    <string name="excelent">Отличное</string>
-    <string name="good">Хорошее</string>
-    <string name="normal">Нормальное</string>
-    <string name="bad">Плохое</string>
-    <string name="very_bad">Ужасное</string>
-    <string name="tap_on_map_to_add_marker_no_digits">Нажмите на карту, чтобы добавить метку</string>
-    <string name="all_fields_are_compulsory">Все поля обязательны</string>
-    <string name="confirm_spot_add">Подтвердить добавление нового спота на карту?</string>
-    <string name="upload_to_moderation">Отправление на модерацию...</string>
-    <string name="yes">Да</string>
-    <string name="no">Нет</string>
-    <string name="image_upload">Загрузка изображений на облако</string>
-    <string name="spot_info_upload">Загрузка данных о споте</string>
-    <string name="new_spot_successfuly_sent_to_moderation">Новый спот был успешно отправлен на модерацию</string>
-    <string name="ok">Ок</string>
-    <string name="spot_loading">Загрузка спотов...</string>
-    <string name="go_to_spot_info">Перейти к информации о споте</string>
-    <string name="spot_review">Обзор спота</string>
-    <string name="condition">Состояние:&#160;</string>
-    <string name="enter_username">Придумайте имя пользователя (оно будет отображаться в описании добавленных вами спотов, также учитываться в рейтингах).</string>
-    <string name="username">Имя пользователя</string>
-    <string name="confirm">Подтвердить</string>
-    <string name="field_cannot_be_empty">Поле не может быть пустым</string>
-    <string name="given_username_already_taken">Данное имя уже занято</string>
-    <string name="username_successfully_set">Имя пользователя успешно установлено.</string>
-    <string name="updated">Обновлено&#160;</string>
-    <string name="by_user">&#160;пользователем</string>
-    <string name="route">Маршрут</string>
-    <string name="spot_editing">Редактирование спота</string>
-    <string name="confirm_spot_edit">Подтвердить изменения?</string>
-    <string name="changes_were_sent">Изменения были успешно отправлены на модерацию</string>
-    <string name="you_need_to_sign_in_to_edit">Чтобы вносить изменения в споты необходимо войти в аккаунт</string>
-    <string name="no_map_app_on_device">На устройстве не найдено подходящего приложения с картами</string>
-    <string name="bookmark_addition_error">Ошибка добавления в избранное</string>
-    <string name="bookmark_removal_error">Ошибка удаления из избранного</string>
-    <string name="you_need_to_sign_in_to_bookmark">Чтобы добавлять споты в избранное необходимо войти в аккаунт</string>
-    <string name="you_need_to_sign_in_to_delete">Чтобы заявить неактуальность спота необходимо войти в аккаунт</string>
-    <string name="you_successfully_signed_in_as">Выполнен вход как&#160;</string>
-    <string name="favorite_spots">Любимые споты</string>
-    <string name="spots_nearby">Ближайшие 10 спотов</string>
-    <string name="you_need_to_sign_in_to_favorites">Чтобы добавлять споты в избранное необходимо войти в аккаунт</string>
-    <string name="theres_nothing_in_favorites_yet">В избранном пока ничего нет</string>
-    <string name="location_data_not_available">Данные о местоположении недоступны</string>
-    <string name="km">&#160;км</string>
-    <string name="account_sign_in">Вход в аккаунт</string>
-    <string name="set_username">Установить имя пользователя</string>
-    <string name="change_username">Сменить имя пользователя</string>
-    <string name="account">Аккаунт</string>
-    <string name="code_of_conduct_at_spot">Кодекс поведения на споте</string>
-    <string name="code_of_conduct_content_1"><b>Общие правила:</b>\n1) Соблюдайте очередь на трюк.\n\n2) Не мусорьте на споте.</string>
-    <string name="code_of_conduct_content_2">На фото макба. Там каждую ночь мусор убирают, что происходит далеко не на всех спотах, но репутация райдеров подпорчена.
-    \n\n3) Не спорьте с охранниками, в большинстве случаев они просто выполняют свою работу. Можно попробовать договориться, но не нужно быть упрямым, грубить или игнорировать их.
-    \n\n4) Не катайтесь под алкоголем. Это лишь снизит продуктивность катки и вероятность призема трюка, но сильно повысит опасность падений.
-    \n\n5) Разминайтесь перед катанием. Это снижает опасность сломаться и ускоряет раскатку.\n
-    \n\n6) Не подрезайте других райдеров.
-    \n\n7) Не крадите трюк, который другой райдер долго пытается приземлить. Лучше немного подождать.
-    \n\n8) Не бросайте доску далеко от себя в приступе ярости.
-    \n\n9) Не заходите в кадр / уважительно относитесь к райдерам, снимающим трюки, и их операторам.
-    \n\n10) Самостоятельно не вносите изменения в дерт-трассы.
-    \n\n11) Не катайтесь по мокрым дертам.
-    \n\n\n<b>В скейт-парке:</b>\n\n1) На фигурах не сидеть\n\n2) Не ехать против естественного течения и паттерна парка, если это помешает другим райдерам.
-    \n\n3) Не наносить парафин на флет, не наносить слишком много воска.
-    \n\n4) Не кататься флет на приземах / подъездах других фигур.
-        \n\n5) Не ставить доску на tail stall, пока в рампе кто-то катается.</string>
-    <string name="no_internet">Отсутствует подключение к интернету</string>
-    <string name="connection_recovered">Подключение восстановлено</string>
-    <string name="username_length_exceeded">Длина никнейма не может превышать 20 символов</string>
-    <string name="update_ui">Обновить список спотов</string>
-    <string name="spots_suggested">Предложено спотов:&#160;</string>
-    <string name="delete_confirm_dialog_content">Вы уверены, что данный спот является неактуальным и его следует удалить из TrickTrack?</string>
-    <string name="delete_suggestion_sent">Предложение об удалении спота успешно отправлено на модерацию</string>
-    <string name="search_by_title">Поиск по названию спота</string>
-    <string name="no_results_found">Ничего не найдено</string>
-    <string name="choose_dice_configuration">Выберите, какие споты будут учитываться в рандоме:</string>
-    <string name="closest_25_spots">Ближайшие 25 спотов</string>
-    <string name="all_spots">Все споты</string>
-    <string name="choose_one_option">Выберите один из вариантов</string>
-    <string name="again">Повторить</string>
-    <string name="go_back">Назад</string>
+    <string name="shop">Shop</string>
+    <string name="choose_spot_type">Select the type of the spot</string>
+    <string name="choose_spot_condition">Select the spot\'s condition</string>
+    <string name="excelent">Excelent</string>
+    <string name="good">Good</string>
+    <string name="normal">Normal</string>
+    <string name="bad">Bad</string>
+    <string name="very_bad">Terrible</string>
+    <string name="tap_on_map_to_add_marker_no_digits">Tap on the map to add a marker</string>
+    <string name="all_fields_are_compulsory">All fields are required</string>
+    <string name="confirm_spot_add">Are you sure you want to add the spot to the map?</string>
+    <string name="upload_to_moderation">Posting for moderation...</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="image_upload">Uploading images to the server</string>
+    <string name="spot_info_upload">Spot description upload</string>
+    <string name="new_spot_successfuly_sent_to_moderation">New spot has been successfully submitted for moderation</string>
+    <string name="ok">Ok</string>
+    <string name="spot_loading">Spots loading...</string>
+    <string name="go_to_spot_info">Show spot details</string>
+    <string name="spot_review">Spot review</string>
+    <string name="condition">Condition:&#160;</string>
+    <string name="enter_username">Come up with a username (it will be displayed in the description of the spots you add, also displayed in the ratings).</string>
+    <string name="username">Username</string>
+    <string name="confirm">Confirm</string>
+    <string name="field_cannot_be_empty">The field cannot be empty</string>
+    <string name="given_username_already_taken">This name is already taken</string>
+    <string name="username_successfully_set">The username has been successfully set.</string>
+    <string name="updated">Updated&#160;</string>
+    <string name="route">Route</string>
+    <string name="spot_editing">Edit spot</string>
+    <string name="confirm_spot_edit">Confirm the changes?</string>
+    <string name="changes_were_sent">The changes were successfully submitted for moderation</string>
+    <string name="you_need_to_sign_in_to_edit">To suggest changes to spots you need to log in to your account</string>
+    <string name="no_map_app_on_device">No suitable map application is found on your device. Consider downloading Yandex or Google Maps.</string>
+    <string name="bookmark_addition_error">Error adding to favorites</string>
+    <string name="bookmark_removal_error">Error deleting from favorites</string>
+    <string name="you_need_to_sign_in_to_bookmark">To add spots to your favorites you need to log in to your account</string>
+    <string name="you_need_to_sign_in_to_delete">To declare a spot irrelevant you need to log in to your account</string>
+    <string name="you_successfully_signed_in_as">Logged in as&#160;</string>
+    <string name="favorite_spots">Favorites</string>
+    <string name="spots_nearby">The 10 nearest</string>
+    <string name="you_need_to_sign_in_to_favorites">To add spots to your favorites you need to log in to your account</string>
+    <string name="theres_nothing_in_favorites_yet">Nothing in favorites yet</string>
+    <string name="location_data_not_available">Location data is not available</string>
+    <string name="km">&#160;km</string>
+    <string name="account_sign_in">Login</string>
+    <string name="set_username">Set username</string>
+    <string name="change_username">Change username</string>
+    <string name="account">Account</string>
+    <string name="code_of_conduct_at_spot">Code of Conduct</string>
+    <string name="code_of_conduct_content_1"><b>General rules:</b>\n\n1) Follow the line for the trick.\n\n2) Don\'t litter on the spot.</string>
+    <string name="code_of_conduct_content_2">That\'s Macba on the photo. They clean up the trash there every night, which doesn\'t happen on all the spots, but the reputation of the riders is ruined.
+    \n\n3) Don\'t argue with the guards, in most cases they are just doing their job. You can try to negotiate, but you don\'t have to be stubborn, rude or ignore them.
+    \n\n4) Do not skate under the influence of alcohol. This will only reduce the productivity of the sesh and the likelihood of a trick land, but will greatly increase the risk of trauma.
+    \n\n5) Warm up before session. This reduces the risk of trauma and speeds up the warm-up.\n
+    \n6) Don\'t cut off other riders.
+    \n\n7) Don\'t steal a trick that another rider has been trying to land for a long time. It\'s better to wait a little.
+    \n\n8) Don\'t throw the board far away from you in a fit of rage..
+    \n\n9) Stay out of the frame / be respectful to riders and their cameramen.
+    \n\n10) Do not make changes to the dirt tracks on your own.
+    \n\n11) Don\'t ride on wet dirt tracks.
+    \n\n\n<b>At the skate park:</b>\n\n1) Don\'t sit on the obstacles\n\n2) Do not go against the natural flow and pattern of the park if it will interfere with other riders.
+    \n\n3) Do not wax the flat, do not apply too much wax.
+    \n\n4) Don\'t skate flat on obstacles\' landings / ride-ups.
+        \n\n5) Do not put the board on a tail stall while someone else is riding in the ramp.</string>
+    <string name="no_internet">You\'re offline</string>
+    <string name="connection_recovered">Connection recovered</string>
+    <string name="username_length_exceeded">The length of the username cannot exceed 20 characters</string>
+    <string name="update_ui">Update spot list</string>
+    <string name="spots_suggested">Spots suggested:&#160;</string>
+    <string name="delete_confirm_dialog_content">Are you sure this spot is irrelevant and should be removed from TrickTrack?</string>
+    <string name="delete_suggestion_sent">The proposal to remove the spot has been successfully sent for moderation</string>
+    <string name="search_by_title">Search by name</string>
+    <string name="no_results_found">Nothing found</string>
+    <string name="choose_dice_configuration">Choose which spots will be counted in the randoms:</string>
+    <string name="closest_25_spots">The nearest 25</string>
+    <string name="all_spots">All spots</string>
+    <string name="choose_one_option">Choose one of the options</string>
+    <string name="again">Again</string>
+    <string name="go_back">Go back</string>
+    <string name="image_proccessing">Image processing</string>
+    <string name="password_restrictions">Password must contain a minimum of 7 characters, including Latin letters and numbers</string>
+    <string name="email_taken">This e-mail address has already been registered</string>
+    <string name="signup_error">Registration error</string>
+    <string name="verification_sent">A confirmation email has been sent. Check your inbox</string>
+    <string name="passwords_dont_match">Passwords don\'t match</string>
+    <string name="you_need_to_verify_email">You need to confirm your e-mail address. New email sent</string>
+    <string name="login_error">Credentials entered incorrectly or Internet connection is unstable</string>
+    <string name="enter_email">Enter your e-mail address in the corresponding field</string>
+    <string name="password_reset_invalid_email">The entered e-mail address is not registered in the app</string>
+    <string name="error_occurred">An error occured</string>
+    <string name="recovery_sent">The password reset email has been sent. Check your inbox.</string>
+    <string name="username_check_error">An error occurred during username verification</string>
+    <string name="login_completed">Logged in as:&#160;</string>
+    <string name="describe_your_issue">Describe your problem or update proposal</string>
+    <string name="feedback_title">The application is still beta, so in case you encounter any bug, you can describe it here and we will fix it promptly. Also, if you have a grand update idea, you can state your suggestion for improvement.</string>
+    <string name="send">Send</string>
+    <string name="message_sent">Message sent</string>
+    <string name="message_error">Error sending the message. Try again later</string>
+    <string name="symbol_count_exceeded">Character limit in title or description exceeded</string>
+    <string name="settings">Settings</string>
+    <string name="localisation">Localisation</string>
+    <string name="language">Language</string>
+    <string name="back">Back</string>
+    <string name="english">English</string>
+    <string name="russian">Russian</string>
+    <string name="more_customization_coming_soon">More customization options coming soon</string>
+    <string name="translator_initialization">Translator initialization...</string>
+    <string name="translating">Automatic translation...</string>
+    <string name="error_downloading_model">Error initializing translator</string>
+    <string name="error_translating">Translation error</string>
+    <string name="automatic_translation_setting">Automatic spot description translation</string>
+    <string name="beta">BETA</string>
+    <string name="automatic_translation_description">Translates spots\' titles and descriptions to your language on the go</string>
+    <string name="appearance">Appearance</string>
+    <string name="night_ride_mode">Night Ride Mode</string>
+    <string name="username_cannot_be_question_mark">Username cannot equal to \"?\"</string>
+    <string name="account_deleted">Account was deleted</string>
+    <string name="delete_account">Delete account</string>
+    <string name="delete_account_dialog_content">Your account and all associated data will be permanently deleted from the app. Are you sure you want to continue?</string>
+    <string name="account_deleted_successfully">Account deleted successfully</string>
 
 </resources>

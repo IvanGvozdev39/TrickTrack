@@ -8,7 +8,7 @@ import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
 
-class SpotTypeAdapter(internal var context: Context, internal var images: IntArray, internal var texts: Array<String>) :
+class SpotTypeAdapter(internal var context: Context, val nightRideMode: Boolean, internal var images: IntArray, internal var texts: Array<String>) :
     BaseAdapter() {
     internal var inflater: LayoutInflater
 
@@ -35,6 +35,10 @@ class SpotTypeAdapter(internal var context: Context, internal var images: IntArr
         val names = view.findViewById<View>(R.id.textView) as TextView?
         icon!!.setImageResource(images[i])
         names!!.text = texts[i]
+        if (nightRideMode) {
+            names.setTextColor(context.getColor(R.color.lighter_grey))
+            view.setBackgroundColor(context.getColor(R.color.dark_theme))
+        }
         return view
     }
 }

@@ -37,14 +37,23 @@
         <item name="closeIcon">@android:color/transparent</item>
     </style>
 
+
     <style name="WhiteMaterialButtonBackground">
         <item name="colorPrimary">@color/white</item>
         <item name="colorPrimaryVariant">@color/white</item>
         <item name="colorOnPrimary">@color/white</item>
     </style>
 
+    <style name="DarkMaterialButtonBackground">
+        <item name="colorPrimary">@color/dark_theme</item>
+        <item name="colorPrimaryVariant">@color/dark_theme</item>
+        <item name="colorOnPrimary">@color/dark_theme</item>
+        <item name="background">@color/dark_theme</item>
+    </style>
 
-
-
+    <style name="GreenTextInputLayout">
+        <item name="android:textColorHint">@color/light_grey</item>
+        <item name="android:textSize">11sp</item>
+    </style>
 
 </resources>

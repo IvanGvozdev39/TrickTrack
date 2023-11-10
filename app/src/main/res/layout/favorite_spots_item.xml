@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="5dp"
+    android:id="@+id/main_background_fav_item"
     app:cardBackgroundColor="@color/white"
     app:cardCornerRadius="10dp">
 

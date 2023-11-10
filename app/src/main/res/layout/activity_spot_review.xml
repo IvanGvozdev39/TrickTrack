@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     android:orientation="vertical"
-    tools:context=".SpotReviewActivity">
+    tools:context="com.tricktrack.tricktrack.SpotReviewActivity"
+    android:id="@+id/main_background_spot_review">
 
 
     <RelativeLayout
@@ -19,10 +20,11 @@
 
         <ImageView
             android:id="@+id/back_button"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:padding="6dp"
             android:layout_centerVertical="true"
-            android:layout_marginStart="15dp"
+            android:layout_marginStart="10dp"
             android:background="@color/transparent"
             app:srcCompat="@drawable/back_button" />
 
@@ -82,6 +84,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
+
                 <!--android:layout_marginTop="16dp"-->
 
                 <!-- Add ImageSwitcher -->
@@ -134,6 +137,7 @@
                         android:src="@drawable/condition_icon" />
 
                     <TextView
+                        android:id="@+id/condition_condition_tv"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
@@ -168,6 +172,7 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/updated_updated_tv"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:text="@string/updated"
@@ -181,13 +186,6 @@
                         android:textColor="@color/light_grey"
                         android:textSize="15sp"
                         android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="@string/by_user"
-                        android:textColor="@color/light_grey"
-                        android:textSize="15sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -234,26 +232,26 @@
                 android:layout_width="60dp"
                 android:layout_height="47dp"
                 android:layout_gravity="center_vertical"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/round_back_cool_teal_20"
                 android:paddingEnd="7dp"
                 android:textColor="@color/white"
                 app:icon="@drawable/edit_icon"
                 app:iconGravity="textStart"
-                app:iconSize="20dp"
-                android:layout_marginEnd="6dp"/>
+                app:iconSize="20dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/delete_button"
                 android:layout_width="60dp"
                 android:layout_height="47dp"
                 android:layout_gravity="center_vertical"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/round_back_cool_teal_20"
                 android:paddingEnd="7dp"
                 android:textColor="@color/white"
                 app:icon="@drawable/delete_icon"
                 app:iconGravity="textStart"
-                app:iconSize="20dp"
-                android:layout_marginEnd="6dp"/>
+                app:iconSize="20dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/route_button"

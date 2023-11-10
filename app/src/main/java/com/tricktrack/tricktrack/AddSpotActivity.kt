@@ -3,20 +3,24 @@ package com.tricktrack.tricktrack
 import android.Manifest
 import android.app.Activity
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Color
+import android.content.res.ColorStateList
+import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import android.os.Parcelable
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.view.Window
@@ -26,13 +30,12 @@ import androidx.activity.result.ActivityResultCaller
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.button.MaterialButton
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
@@ -47,8 +50,9 @@ import com.yandex.mapkit.map.Map
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.runtime.image.ImageProvider
+import kotlinx.coroutines.*
 import java.io.ByteArrayOutputStream
-import java.lang.Double.min
+import java.lang.Float.min
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -66,7 +70,7 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
     private lateinit var locationOnMapKit: UserLocationLayer
     private var zoomValue: Float = 15f
     private lateinit var mapFrameLayout: FrameLayout
-    private lateinit var zoomFab: FloatingActionButton
+    private lateinit var zoomFab: MaterialButton
     private lateinit var mapObjectCollection: MapObjectCollection
     private var placemarkMapObject: PlacemarkMapObject? = null
     private lateinit var location: Point
@@ -85,6 +89,11 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
     private var fromSpotReviewActivity = false
     private lateinit var receivedProponent: String
     private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
+    private lateinit var checkIconLoading: ProgressBar
+    private lateinit var checkIcon: ImageView
+    private lateinit var titleSymbolCount: TextView
+    private lateinit var descriptionSymbolCount: TextView
+    private lateinit var pref: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,22 +104,86 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
         coordinatesTV = findViewById(R.id.coordinates_text_view)
         spotTitleEditText = findViewById(R.id.spot_title_edit_text)
         spotDescriptionEditText = findViewById(R.id.spot_description_edit_text)
+        checkIconLoading = findViewById(R.id.check_icon_loading)
+        checkIcon = findViewById(R.id.check_icon)
+        titleSymbolCount = findViewById(R.id.title_symbol_count)
+        descriptionSymbolCount = findViewById(R.id.description_symbol_count)
         FirebaseApp.initializeApp(this)
 
-        galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            val resultCode = result.resultCode
-            val data = result.data
+        pref = getSharedPreferences("Settings", Context.MODE_PRIVATE)
 
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                val selectedImageUri = data.data
+        galleryLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+                val resultCode = result.resultCode
+                val data = result.data
 
-                // Load the selected image into the clicked ImageView
-                selectedImageView.setImageURI(selectedImageUri)
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    val selectedImageUri = data.data
 
-                // Set the background to null to remove the plus sign drawable
-                selectedImageView.background = null
+                    // Load the selected image into the clicked ImageView
+                    selectedImageView.setImageURI(selectedImageUri)
+
+                    val drawable = selectedImageView.drawable
+                    if (drawable is BitmapDrawable) {
+                        val resizedBitmap = resizeBitmap(drawable.bitmap, 1000, 1000)
+//                        imageBitmapArray.add(resizedBitmap)
+                        selectedImageView.setImageBitmap(resizedBitmap)
+                    }
+
+                    // Set the background to null to remove the plus sign drawable
+                    selectedImageView.background = null
+                }
             }
-        }
+
+        spotTitleEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int
+            ) {
+                // This method is called before the text is changed.
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // This method is called when the text is changed. You can perform actions here.
+                val symbolCount = spotTitleEditText.text.length
+                titleSymbolCount.text = "$symbolCount/120"
+                if (symbolCount > 120)
+                    titleSymbolCount.setTextColor(getColor(R.color.red))
+                else
+                    titleSymbolCount.setTextColor(getColor(R.color.light_grey))
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                // This method is called after the text is changed.
+            }
+        })
+
+        spotDescriptionEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int
+            ) {
+                // This method is called before the text is changed.
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // This method is called when the text is changed. You can perform actions here.
+                val symbolCount = spotDescriptionEditText.text.length
+                descriptionSymbolCount.text = "$symbolCount/1500"
+                if (symbolCount > 1500)
+                    descriptionSymbolCount.setTextColor(getColor(R.color.red))
+                else
+                    descriptionSymbolCount.setTextColor(getColor(R.color.light_grey))
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                // This method is called after the text is changed.
+            }
+        })
 
 
         // Initialize the arrays inside the onCreate method
@@ -169,7 +242,7 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
                 position: Int,
                 id: Long
             ) {
-                chosenSpotType = spotTypeFirebaseTexts.get(position)
+                chosenSpotType = spotTypeFirebaseTexts[position]
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
@@ -177,7 +250,7 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
             }
         }
 
-        val customAdapter = SpotTypeAdapter(applicationContext, spotTypeImages, spotTypeTexts)
+        val customAdapter = SpotTypeAdapter(applicationContext, pref.getBoolean("NightRideMode", false), spotTypeImages, spotTypeTexts)
         spinnerSpotType.adapter = customAdapter
         findViewById<ImageView>(R.id.arrow_down_image_spot_type).setOnClickListener { spinnerSpotType.performClick() }
 
@@ -190,22 +263,22 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
                 position: Int,
                 id: Long
             ) {
-                chosenCondition = conditionFirebaseTexts.get(position)
+                chosenCondition = conditionFirebaseTexts[position]
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
 
             }
         }
-        val customAdapterNoImage = Adapter(applicationContext, conditionTexts)
+        val customAdapterNoImage = SpotConditionAdapter(applicationContext, pref.getBoolean("NightRideMode", false), conditionTexts)
         spinnerCondition.adapter = customAdapterNoImage
         findViewById<ImageView>(R.id.arrow_down_image_condition).setOnClickListener { spinnerCondition.performClick() }
 
-        mapView = findViewById<MapView>(R.id.mapview)
+        mapView = findViewById(R.id.mapview)
         scrollViewAddSpot = findViewById(R.id.add_spot_scroll_view)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        var mapKit: MapKit = MapKitFactory.getInstance()
-        locationOnMapKit = mapView?.mapWindow?.let { mapKit.createUserLocationLayer(it) }!!
+        val mapKit: MapKit = MapKitFactory.getInstance()
+        locationOnMapKit = mapView.mapWindow?.let { mapKit.createUserLocationLayer(it) }!!
         locationOnMapKit.isVisible = true
         checkLocationPermissionAndAvailability()
 
@@ -224,16 +297,16 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
             if (mapFrameLayout.visibility == View.VISIBLE || fromSpotReviewActivity)
                 onBackPressedDispatcher.onBackPressed()
             else {
-                findViewById<TextView>(R.id.actionbar_title).setText(getString(R.string.tap_on_map_to_add_marker))
+                findViewById<TextView>(R.id.actionbar_title).text = getString(R.string.tap_on_map_to_add_marker)
                 mapFrameLayout.visibility = View.VISIBLE
                 scrollViewAddSpot.visibility = View.GONE
             }
         }
 
-        findViewById<ImageView>(R.id.check_icon).setOnClickListener {
+        checkIcon.setOnClickListener {
             if (mapFrameLayout.visibility == View.VISIBLE) {
                 if (placemarkMapObject != null) {
-                    findViewById<TextView>(R.id.actionbar_title).setText(getString(R.string.spot_info))
+                    findViewById<TextView>(R.id.actionbar_title).text = getString(R.string.spot_info)
                     mapFrameLayout.visibility = View.GONE
                     scrollViewAddSpot.visibility = View.VISIBLE
                 } else {
@@ -244,11 +317,11 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
                     ).show()
                 }
             } else {
-                var image1 = findViewById<ImageView>(R.id.image1)
-                var image2 = findViewById<ImageView>(R.id.image2)
-                var image3 = findViewById<ImageView>(R.id.image3)
-                var image4 = findViewById<ImageView>(R.id.image4)
-                var image5 = findViewById<ImageView>(R.id.image5)
+                val image1 = findViewById<ImageView>(R.id.image1)
+                val image2 = findViewById<ImageView>(R.id.image2)
+                val image3 = findViewById<ImageView>(R.id.image3)
+                val image4 = findViewById<ImageView>(R.id.image4)
+                val image5 = findViewById<ImageView>(R.id.image5)
 
                 var drawable = image1.drawable
                 if (drawable is BitmapDrawable && !drawable.equals(getDrawable(R.drawable.rounded_rectangle_light_grey_with_plus))) {
@@ -273,27 +346,36 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
 
                 if (spotTitleEditText.text.trim().isEmpty() || spotDescriptionEditText.text.trim()
                         .isEmpty() || chosenSpotType.trim().isEmpty() ||
-                    chosenCondition.trim().isEmpty() || chosenCondition.trim()
-                        .equals(getString(R.string.choose_spot_condition)) || imageBitmapArray.isEmpty() ||
-                    chosenSpotType.trim().equals(getString(R.string.choose_spot_type))
+                    chosenCondition.trim().isEmpty() || chosenCondition.trim() == getString(R.string.choose_spot_condition) || imageBitmapArray.isEmpty() ||
+                    chosenSpotType.trim() == getString(R.string.choose_spot_type)
                 ) {
                     Toast.makeText(
                         baseContext,
                         getString(R.string.all_fields_are_compulsory),
                         Toast.LENGTH_SHORT
                     ).show()
+                } else if (spotTitleEditText.text.length > 120 || spotDescriptionEditText.text.length > 1500) {
+                  Toast.makeText(baseContext, getString(R.string.symbol_count_exceeded), Toast.LENGTH_SHORT).show()
                 } else {
+                    checkIcon.visibility = View.GONE
+                    checkIconLoading.visibility = View.VISIBLE
                     //TODO: Username check:
                     db.collection("Users").document(auth.currentUser!!.uid).get()
                         .addOnSuccessListener { document ->
                             if (document.get("username") == null || document.get("username")
                                     .toString().isEmpty()
                             ) {
+                                checkIcon.visibility = View.VISIBLE
+                                checkIconLoading.visibility = View.GONE
                                 dialogUsernameSetUp()
                             } else {
+                                checkIcon.visibility = View.VISIBLE
+                                checkIconLoading.visibility = View.GONE
                                 spotUploadToFirebase()
                             }
                         }.addOnFailureListener {
+                            checkIcon.visibility = View.VISIBLE
+                            checkIconLoading.visibility = View.GONE
                             dialogUsernameSetUp()
                         }
 
@@ -306,7 +388,7 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
         if (fromSpotReviewActivity) {
             mapFrameLayout.visibility = View.GONE
             scrollViewAddSpot.visibility = View.VISIBLE
-            findViewById<TextView>(R.id.actionbar_title).setText(getString(R.string.spot_editing))
+            findViewById<TextView>(R.id.actionbar_title).text = getString(R.string.spot_editing)
             receivedLatitude = intent.getDoubleExtra("latitude", 0.0)
             receivedLongitude = intent.getDoubleExtra("longitude", 0.0)
             val receivedPoint = Point(receivedLatitude, receivedLongitude)
@@ -315,9 +397,9 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
             val receivedDescription = intent.getStringExtra("description")
             val receivedCondition = intent.getStringExtra("condition")
             val receivedType = intent.getStringExtra("type")
-            val receivedDate = intent.getStringExtra("date")
+            intent.getStringExtra("date")
             receivedProponent = intent.getStringExtra("proponent").toString()
-            val imageUris = intent.getParcelableArrayListExtra<Uri>("imageUris")
+            val imageUris = intent.parcelableArrayList<Uri>("imageUris")
             val receivedImagesList = ArrayList<Bitmap>()
 
             if (imageUris != null) {
@@ -334,14 +416,17 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
 
             spotTitleEditText.setText(receivedTitle)
             spotDescriptionEditText.setText(receivedDescription)
+            titleSymbolCount.text = "${receivedTitle!!.length}/120"
+            descriptionSymbolCount.text = "${receivedDescription!!.length}/1500"
+
             var conditionIndex = 0
-            for (i in 0 until conditionTexts.size) {
+            for (i in conditionTexts.indices) {
                 if (receivedCondition.equals(conditionTexts[i]))
                     conditionIndex = i
             }
             spinnerCondition.setSelection(conditionIndex)
             var spotTypeIndex = 0
-            for (i in 0 until spotTypeTexts.size) {
+            for (i in spotTypeTexts.indices) {
                 if (receivedType.equals(spotTypeTexts[i]))
                     spotTypeIndex = i
             }
@@ -352,7 +437,8 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
             val image4IV = findViewById<ImageView>(R.id.image4)
             val image5IV = findViewById<ImageView>(R.id.image5)
 
-            val imageIVArray = arrayListOf<ImageView>(image1IV, image2IV, image3IV, image4IV, image5IV)
+            val imageIVArray =
+                arrayListOf<ImageView>(image1IV, image2IV, image3IV, image4IV, image5IV)
 
             for (i in 0 until receivedImagesList.size) {
                 imageIVArray[i].setImageBitmap(receivedImagesList[i])
@@ -360,6 +446,45 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
             }
         }
 
+        if (pref.getBoolean("NightRideMode", false)) {
+            mapView.map?.isNightModeEnabled = true
+            coordinatesTV.setTextColor(getColor(R.color.lighter_grey))
+            zoomFab.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.dark_theme)))
+            findViewById<LinearLayout>(R.id.main_background_add_spot).setBackgroundColor(getColor(R.color.dark_theme))
+            spotTitleEditText.setTextColor(getColor(R.color.lighter_grey))
+            spotTitleEditText.setBackgroundColor(getColor(R.color.dark_theme))
+            spotDescriptionEditText.setTextColor(getColor(R.color.lighter_grey))
+            spotDescriptionEditText.setBackgroundColor(getColor(R.color.dark_theme))
+            findViewById<ImageView>(R.id.arrow_down_image_spot_type).setColorFilter(getColor(R.color.light_grey))
+            findViewById<ImageView>(R.id.arrow_down_image_condition).setColorFilter(getColor(R.color.light_grey))
+            findViewById<ImageView>(R.id.image1).setBackgroundResource(R.drawable.rounded_rectangle_dark_theme_lighter_with_plus)
+            findViewById<ImageView>(R.id.image2).setBackgroundResource(R.drawable.rounded_rectangle_dark_theme_lighter_with_plus)
+            findViewById<ImageView>(R.id.image3).setBackgroundResource(R.drawable.rounded_rectangle_dark_theme_lighter_with_plus)
+            findViewById<ImageView>(R.id.image4).setBackgroundResource(R.drawable.rounded_rectangle_dark_theme_lighter_with_plus)
+            findViewById<ImageView>(R.id.image5).setBackgroundResource(R.drawable.rounded_rectangle_dark_theme_lighter_with_plus)
+        }
+
+    }
+
+
+    /*inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? = when {
+        SDK_INT >= 33 -> getParcelableExtra(key, T::class.java)
+        else -> @Suppress("DEPRECATION") getParcelableExtra(key) as? T
+    }
+
+    inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? = when {
+        SDK_INT >= 33 -> getParcelable(key, T::class.java)
+        else -> @Suppress("DEPRECATION") getParcelable(key) as? T
+    }
+
+    inline fun <reified T : Parcelable> Bundle.parcelableArrayList(key: String): ArrayList<T>? = when {
+        SDK_INT >= 33 -> getParcelableArrayList(key, T::class.java)
+        else -> @Suppress("DEPRECATION") getParcelableArrayList(key)
+    }*/
+
+    private inline fun <reified T : Parcelable> Intent.parcelableArrayList(key: String): ArrayList<T>? = when {
+        SDK_INT >= 33 -> getParcelableArrayListExtra(key, T::class.java)
+        else -> @Suppress("DEPRECATION") getParcelableArrayListExtra(key)
     }
 
 
@@ -372,8 +497,6 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
         val dialogBtnYes = dialog.findViewById<AppCompatButton>(R.id.button_confirm)
         val dialogBtnNo = dialog.findViewById<AppCompatButton>(R.id.button_no)
         dialogBtnYes.setOnClickListener {
-
-            //TODO: Final confirm and Firebase upload:
             dialog.dismiss()
             val dialogLoading = Dialog(this)
             dialogLoading.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -381,231 +504,281 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
             dialogLoading.setContentView(R.layout.dialog_add_spot_loading)
             dialogLoading.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             dialogLoading.show()
-            var dialogLoadingDetails =
+            val dialogLoadingDetails =
                 dialogLoading.findViewById<TextView>(R.id.dialog_loading_details)
-            dialogLoadingDetails.setText(getString(R.string.image_upload))
+            dialogLoadingDetails.text = getString(R.string.image_proccessing)
 
-            //Uploading images to Storage
             val storage = FirebaseStorage.getInstance()
             val storageRef = storage.reference
-
-// Initialize a reference to the SpotImages folder
             val imagesRef = storageRef.child("SpotImages")
+            val targetSizeInBytes = 500 * 1024 // 100 KB in bytes
+            val uploadTasks = mutableListOf<Deferred<ByteArray>>() // Store upload tasks
 
-// Iterate through your bitmap images
-            val targetSizeInBytes = 100 * 1024 // 100 KB in bytes
-
-            for ((index, bitmap) in imageBitmapArray.withIndex()) {
-                // Create a unique filename for each image (you can use any logic)
+            for (bitmap in imageBitmapArray) {
                 val imageName = "${System.currentTimeMillis()}_${UUID.randomUUID()}.jpg"
-                val imageRef = imagesRef.child(imageName)
+                imagesRef.child(imageName)
 
-                // Initialize compression quality and dimensions
-                var compressionQuality = 80 // Start with a reasonable quality
-                var width = bitmap.width
-                var height = bitmap.height
-
-                // Compress the image while checking the size
-                val baos = ByteArrayOutputStream()
-                lateinit var resizedBitmap: Bitmap
-                lateinit var data: ByteArray
-                do {
-                    // Resize the image dimensions (optional)
-                    if (width > 2048 || height > 2048) {
-                        // Resize the image to a maximum dimension of 2048 pixels
-                        val scaleFactor = min(2048.0 / width, 2048.0 / height)
-                        width = (width * scaleFactor).toInt()
-                        height = (height * scaleFactor).toInt()
-                        resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
-                        bitmap.recycle() // Recycle the original bitmap
-                        resizedBitmap.compress(Bitmap.CompressFormat.JPEG, compressionQuality, baos)
-                    } else {
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, compressionQuality, baos)
-                    }
-
-                    // Compress the bitmap with the current quality setting
-
-                    data = baos.toByteArray()
-
-                    // Check the size of the compressed image
-                    if (data.size > targetSizeInBytes) {
-                        // If the size is too large, reduce the quality and try again
-                        compressionQuality -= 5 // Adjust the quality reduction step as needed
-                        baos.reset() // Reset the ByteArrayOutputStream
-                    } else {
-                        // If the size is within the target range, break out of the loop
-                        break
-                    }
-                } while (compressionQuality > 0)
-
-                // Upload the compressed image to Firebase Storage
-                val uploadTask = imageRef.putBytes(data)
-
-                // Monitor the upload progress (optional)
-                uploadTask.addOnProgressListener { snapshot ->
-                    val progress = (100.0 * snapshot.bytesTransferred / snapshot.totalByteCount)
-                    // Update progress UI if needed
-//                        dialogLoadingDetails.setText(getString(R.string.image_upload) + " ${progress.toString()}%")
+                val uploadTask = GlobalScope.async {
+                    compressImageAsync(bitmap, targetSizeInBytes)
                 }
 
-                // Handle successful upload
-                uploadTask.addOnSuccessListener { taskSnapshot ->
-                    // Get the download URL
-                    imageRef.downloadUrl.addOnSuccessListener { uri ->
-                        val downloadUrl = uri.toString()
-                        // Save the download URL to your array
-                        imageStorageLinkArray.add(downloadUrl)
+                uploadTasks.add(uploadTask)
+            }
+            Log.d("uploadtaskscount", uploadTasks.size.toString())
 
-                        // Check if all images are uploaded and links are saved
-                        if (imageStorageLinkArray.size == imageBitmapArray.size) {
-                            dialogLoadingDetails.setText(getString(R.string.spot_info_upload))
-                            var spotProponent = ""
-                            db.collection("Users").document(auth.currentUser!!.uid).get()
-                                .addOnSuccessListener { document ->
-                                    if (!fromSpotReviewActivity)
-                                        spotProponent = document.get("username").toString()
-                                    else
-                                        spotProponent = receivedProponent
+            GlobalScope.launch {
+                uploadTasks.awaitAll()
 
-                                    val calendar = Calendar.getInstance()
+                runOnUiThread {
+                    dialogLoadingDetails.text = getString(R.string.image_upload)
+                }
 
-                                    // Get the current date
-                                    val currentDate = calendar.time
+                var imagesProcessedCount = 0
 
-                                    // Format the current date as a string
-                                    val dateFormatter = SimpleDateFormat("dd.MM.yyyy")
-                                    val formattedDate = dateFormatter.format(currentDate)
+                for (uploadTask in uploadTasks) {
+                    val finalData = uploadTask.await()
 
-                                    val newSpot = hashMapOf(
-                                        "latitude" to location.latitude,
-                                        "longitude" to location.longitude,
-                                        "title" to spotTitleEditText.text.trim().toString(),
-                                        "description" to spotDescriptionEditText.text.trim()
-                                            .toString(),
-                                        "type" to chosenSpotType,
-                                        "condition" to chosenCondition,
-                                        "proponent" to spotProponent,
-                                        "date" to formattedDate
-                                    )
-                                    for (i in 0..imageStorageLinkArray.size - 1) {
-                                        newSpot.put("image${i + 1}", imageStorageLinkArray.get(i))
-                                    }
+                    val imageName = "${System.currentTimeMillis()}_${UUID.randomUUID()}.jpg"
+                    val imageRef = imagesRef.child(imageName)
 
-                                    var correctCollectionPath = "Spots"
-                                    if (fromSpotReviewActivity)
-                                        correctCollectionPath = "Edit"
+                    val uploadTask = imageRef.putBytes(finalData)
 
-                                    val moderationCollection = db.collection(correctCollectionPath) //TODO: !!!!!!!!!!!CHANGE TO "MODERATION" BEFORE GOING IN PRODUCTION!!!!!!!!!!!!!1
+                    // Monitor the upload progress (optional)
+                    uploadTask.addOnProgressListener { snapshot ->
+                        (100.0 * snapshot.bytesTransferred / snapshot.totalByteCount)
+                        // Update progress UI if needed
+                        // dialogLoadingDetails.setText(getString(R.string.image_upload) + " ${progress.toString()}%")
+                    }
+
+                    // Handle successful upload
+                    uploadTask.addOnSuccessListener {
+                        // Get the download URL
+                        imageRef.downloadUrl.addOnSuccessListener { uri ->
+                            val downloadUrl = uri.toString()
+                            // Save the download URL to your array
+                            imageStorageLinkArray.add(downloadUrl)
+
+                            // Increment the counter for processed images
+                            imagesProcessedCount++
+
+                            // Check if all images are uploaded and links are saved
+                            if (imagesProcessedCount == imageBitmapArray.size) {
+                                dialogLoadingDetails.text = getString(R.string.spot_info_upload)
+                                var spotProponent: String
+                                db.collection("Users").document(auth.currentUser!!.uid).get()
+                                    .addOnSuccessListener { document ->
+                                        spotProponent = if (!fromSpotReviewActivity)
+                                            document.get("username").toString()
+                                        else
+                                            receivedProponent
+
+                                        val calendar = Calendar.getInstance()
+
+                                        // Get the current date
+                                        val currentDate = calendar.time
+
+                                        // Format the current date as a string
+                                        val dateFormatter = SimpleDateFormat("dd.MM.yyyy")
+                                        val formattedDate = dateFormatter.format(currentDate)
+
+                                        val newSpot = hashMapOf(
+                                            "latitude" to location.latitude,
+                                            "longitude" to location.longitude,
+                                            "title" to spotTitleEditText.text.trim().toString(),
+                                            "description" to spotDescriptionEditText.text.trim()
+                                                .toString(),
+                                            "type" to chosenSpotType,
+                                            "condition" to chosenCondition,
+                                            "proponent" to spotProponent,
+                                            "date" to formattedDate
+                                        )
+                                        for (i in 0 until imageStorageLinkArray.size) {
+                                            newSpot["image${i + 1}"] = imageStorageLinkArray[i]
+                                        }
+
+                                        var correctCollectionPath = "Moderation"
+                                        if (fromSpotReviewActivity)
+                                            correctCollectionPath = "Edit"
+
+                                        val moderationCollection =
+                                            db.collection(correctCollectionPath)
 
 
-
-                                    val documentName =
-                                        location.latitude.toString() + location.longitude.toString()
-                                    val documentId = documentName
-                                    moderationCollection.document(documentId)
-                                        .set(newSpot)
-                                        .addOnSuccessListener { documentReference ->
-                                            db.collection("Users").document(auth.currentUser!!.uid)
-                                                .get().addOnSuccessListener { document ->
-                                                if (document.get("proposed") == null) {
-                                                    var tempProposedCount = 1
-                                                    if (fromSpotReviewActivity)
-                                                        tempProposedCount = 0
-                                                    val data = hashMapOf(
-                                                        "username" to document.get("username"),
-                                                        "proposed" to tempProposedCount
-                                                    )
-                                                    db.collection("Users")
-                                                        .document(auth.currentUser!!.uid).set(data)
-                                                        .addOnSuccessListener {
-                                                            dialogLoading.dismiss()
-                                                            val dialogFinished = Dialog(this)
-                                                            dialogFinished.requestWindowFeature(
-                                                                Window.FEATURE_NO_TITLE
-                                                            )
-                                                            dialogFinished.setCancelable(true)
-                                                            dialogFinished.setContentView(R.layout.dialog_add_spot_finished)
-                                                            dialogFinished.window?.setBackgroundDrawable(
-                                                                ColorDrawable(Color.TRANSPARENT)
-                                                            )
-                                                            val okBtnDialog =
-                                                                dialogFinished.findViewById<AppCompatButton>(
-                                                                    R.id.button_ok
-                                                                )
-                                                            okBtnDialog.setOnClickListener {
-                                                                dialogFinished.dismiss()
-                                                                onBackPressedDispatcher.onBackPressed()
-                                                            }
-                                                            dialogFinished.show()
+                                        val documentName =
+                                            location.latitude.toString() + location.longitude.toString()
+                                        moderationCollection.document(documentName)
+                                            .set(newSpot)
+                                            .addOnSuccessListener {
+                                                db.collection("Users")
+                                                    .document(auth.currentUser!!.uid)
+                                                    .get().addOnSuccessListener { document ->
+                                                        if (document.get("proposed") == null) {
+                                                            var tempProposedCount = 1
                                                             if (fromSpotReviewActivity)
-                                                                dialogFinished.findViewById<TextView>(R.id.dialog_content).setText(getString(R.string.changes_were_sent))
-                                                        }
-                                                } else {
-                                                    val proposedCount =
-                                                        (document.get("proposed") as Long).toInt()
-                                                    var tempProposedIncrement = 1
-                                                    if (fromSpotReviewActivity)
-                                                        tempProposedIncrement = 0
-                                                    val data = hashMapOf(
-                                                        "username" to document.get("username"),
-                                                        "proposed" to proposedCount + tempProposedIncrement
-                                                    )
-                                                    db.collection("Users")
-                                                        .document(auth.currentUser!!.uid).set(data)
-                                                        .addOnSuccessListener {
-                                                            dialogLoading.dismiss()
-                                                            val dialogFinished = Dialog(this)
-                                                            dialogFinished.requestWindowFeature(
-                                                                Window.FEATURE_NO_TITLE
+                                                                tempProposedCount = 0
+                                                            val data = hashMapOf(
+                                                                "username" to document.get("username"),
+                                                                "proposed" to tempProposedCount
                                                             )
-                                                            dialogFinished.setCancelable(true)
-                                                            dialogFinished.setContentView(R.layout.dialog_add_spot_finished)
-                                                            dialogFinished.window?.setBackgroundDrawable(
-                                                                ColorDrawable(Color.TRANSPARENT)
+                                                            db.collection("Users")
+                                                                .document(auth.currentUser!!.uid)
+                                                                .update(data)
+                                                                .addOnSuccessListener {
+                                                                    dialogLoading.dismiss()
+                                                                    val dialogFinished =
+                                                                        Dialog(this@AddSpotActivity)
+                                                                    dialogFinished.requestWindowFeature(
+                                                                        Window.FEATURE_NO_TITLE
+                                                                    )
+                                                                    dialogFinished.setCancelable(
+                                                                        true
+                                                                    )
+                                                                    dialogFinished.setContentView(R.layout.dialog_add_spot_finished)
+                                                                    dialogFinished.window?.setBackgroundDrawable(
+                                                                        ColorDrawable(Color.TRANSPARENT)
+                                                                    )
+                                                                    val okBtnDialog =
+                                                                        dialogFinished.findViewById<AppCompatButton>(
+                                                                            R.id.button_ok
+                                                                        )
+                                                                    okBtnDialog.setOnClickListener {
+                                                                        dialogFinished.dismiss()
+                                                                        onBackPressedDispatcher.onBackPressed()
+                                                                    }
+                                                                    dialogFinished.show()
+                                                                    if (fromSpotReviewActivity)
+                                                                        dialogFinished.findViewById<TextView>(
+                                                                            R.id.dialog_content
+                                                                        ).text = getString(R.string.changes_were_sent)
+                                                                }
+                                                        } else {
+                                                            val proposedCount =
+                                                                (document.get("proposed") as Long).toInt()
+                                                            var tempProposedIncrement = 1
+                                                            if (fromSpotReviewActivity)
+                                                                tempProposedIncrement = 0
+                                                            val data = hashMapOf(
+                                                                "username" to document.get("username"),
+                                                                "proposed" to proposedCount + tempProposedIncrement
                                                             )
-                                                            val okBtnDialog =
-                                                                dialogFinished.findViewById<AppCompatButton>(
-                                                                    R.id.button_ok
-                                                                )
-                                                            okBtnDialog.setOnClickListener {
-                                                                dialogFinished.dismiss()
-                                                                onBackPressedDispatcher.onBackPressed()
-                                                            }
-                                                            dialogFinished.show()
+                                                            db.collection("Users")
+                                                                .document(auth.currentUser!!.uid)
+                                                                .update(data)
+                                                                .addOnSuccessListener {
+                                                                    dialogLoading.dismiss()
+                                                                    val dialogFinished =
+                                                                        Dialog(this@AddSpotActivity)
+                                                                    dialogFinished.requestWindowFeature(
+                                                                        Window.FEATURE_NO_TITLE
+                                                                    )
+                                                                    dialogFinished.setCancelable(
+                                                                        true
+                                                                    )
+                                                                    dialogFinished.setContentView(R.layout.dialog_add_spot_finished)
+                                                                    dialogFinished.window?.setBackgroundDrawable(
+                                                                        ColorDrawable(Color.TRANSPARENT)
+                                                                    )
+                                                                    val okBtnDialog =
+                                                                        dialogFinished.findViewById<AppCompatButton>(
+                                                                            R.id.button_ok
+                                                                        )
+                                                                    okBtnDialog.setOnClickListener {
+                                                                        dialogFinished.dismiss()
+                                                                        onBackPressedDispatcher.onBackPressed()
+                                                                    }
+                                                                    dialogFinished.show()
+                                                                }
                                                         }
-                                                }
-                                            }
+                                                    }
 
-                                        }
-                                        .addOnFailureListener { e ->
-                                            // Handle errors
-                                        }
-                                }
+                                            }
+                                            .addOnFailureListener {
+                                                // Handle errors
+                                            }
+                                    }
+                            }
                         }
                     }
-                }
 
-                // Handle upload failures (if needed)
-                uploadTask.addOnFailureListener { exception ->
-                    // Handle the error
+                    // Handle upload failures (if needed)
+                    uploadTask.addOnFailureListener {
+                        // Handle the error
+                    }
                 }
             }
-
-
         }
+
         dialogBtnNo.setOnClickListener {
             dialog.dismiss()
         }
+
         dialog.show()
         if (fromSpotReviewActivity)
-            dialog.findViewById<TextView>(R.id.dialog_content).setText(getString(R.string.confirm_spot_edit))
+            dialog.findViewById<TextView>(R.id.dialog_content).text = getString(R.string.confirm_spot_edit)
+    }
+
+
+    private fun resizeBitmap(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+
+        // Calculate the scale factor to fit within the specified dimensions
+        val scaleWidth = maxWidth.toFloat() / width
+        val scaleHeight = maxHeight.toFloat() / height
+        val scaleFactor = min(scaleWidth, scaleHeight)
+
+        // Create a new scaled bitmap
+        val matrix = Matrix()
+        matrix.postScale(scaleFactor, scaleFactor)
+
+        return Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
+    }
+
+
+    private fun compressImageAsync(bitmap: Bitmap, targetSizeInBytes: Int): ByteArray {
+        var compressionQuality = 100 // Start with a reasonable quality
+        val baos = ByteArrayOutputStream()
+
+        // Compress the bitmap to WebP format
+        if (SDK_INT >= Build.VERSION_CODES.R) {
+            bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, compressionQuality, baos)
+        } else
+            bitmap.compress(Bitmap.CompressFormat.WEBP, compressionQuality, baos)
+
+        val data = baos.toByteArray()
+        val dataSize = data.size
+        Log.d("dataSizeBytes", dataSize.toString())
+
+        if (dataSize > targetSizeInBytes) {
+            val targetSizeToDataSizePercentage: Float =
+                targetSizeInBytes.toFloat() / dataSize.toFloat()
+            val timesSmallerTarget = 1 / targetSizeToDataSizePercentage
+            compressionQuality = (100 / timesSmallerTarget).toInt()
+            if (compressionQuality == 0) {
+                compressionQuality = 1
+            }
+
+            // Compress the bitmap again with the updated compression quality
+            baos.reset() // Clear the existing data in the stream
+
+            // Compress to WebP format with the new compression quality
+            if (SDK_INT >= Build.VERSION_CODES.R) {
+                bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, compressionQuality, baos)
+            } else
+                bitmap.compress(Bitmap.CompressFormat.WEBP, compressionQuality, baos)
+        }
+
+        val finalData = baos.toByteArray()
+        Log.d("finalDataYes", "one finalData is defined")
+
+        return finalData
     }
 
 
     private fun dialogUsernameSetUp() {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setCancelable(false)
+        dialog.setCancelable(true)
         dialog.setContentView(R.layout.dialog_enter_username)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         val dialogBtnConfirm = dialog.findViewById<AppCompatButton>(R.id.button_confirm)
@@ -623,15 +796,19 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
             dialogErrorMessage.text = ""
             if (dialogUsernameField.text.isBlank()) {
                 dialogErrorMessage.text = getString(R.string.field_cannot_be_empty)
+            } else if (dialogUsernameField.text.length > 20) {
+                dialogErrorMessage.text = getString(R.string.username_length_exceeded)
+            } else if (dialogUsernameField.text.toString().equals("?")) {
+                dialogErrorMessage.text = getString(R.string.username_cannot_be_question_mark)
             } else {
-                var usernameEntered = dialogUsernameField.text.toString()
+                val usernameEntered = dialogUsernameField.text.toString()
                 var usernameTaken = false
                 dialogBtnConfirm.visibility = View.GONE
                 dialogLoading.visibility = View.VISIBLE
                 db.collection("Users").get().addOnSuccessListener { documents ->
                     Log.d("asasassin", "checking if the name is taken")
                     for (document in documents) {
-                        if (usernameEntered.equals(document.get("username"))) {
+                        if (usernameEntered == document.get("username")) {
                             usernameTaken = true
                             break
                         }
@@ -642,7 +819,7 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
                         dialogLoading.visibility = View.GONE
                     } else {
                         val data = hashMapOf("username" to usernameEntered)
-                        db.collection("Users").document(auth.currentUser!!.uid).set(data)
+                        db.collection("Users").document(auth.currentUser!!.uid).update(data as kotlin.collections.Map<String, Any>)
                             .addOnSuccessListener {
                                 mainLayout.visibility = View.GONE
                                 successLayout.visibility = View.VISIBLE
@@ -658,7 +835,7 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
                         dialogBtnConfirm.visibility = View.GONE
                         dialogLoading.visibility = View.VISIBLE
                         val data = hashMapOf("username" to usernameEntered)
-                        db.collection("Users").document(auth.currentUser!!.uid).set(data)
+                        db.collection("Users").document(auth.currentUser!!.uid).update(data as kotlin.collections.Map<String, Any>)
                             .addOnSuccessListener {
                                 mainLayout.visibility = View.GONE
                                 successLayout.visibility = View.VISIBLE
@@ -679,7 +856,7 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
         if (mapFrameLayout.visibility == View.VISIBLE)
             onBackPressedDispatcher.onBackPressed()
         else {
-            findViewById<TextView>(R.id.actionbar_title).setText(getString(R.string.tap_on_map_to_add_marker))
+            findViewById<TextView>(R.id.actionbar_title).text = getString(R.string.tap_on_map_to_add_marker)
             mapFrameLayout.visibility = View.VISIBLE
             scrollViewAddSpot.visibility = View.GONE
         }
@@ -706,14 +883,14 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
             mapView.map!!.mapObjects // Инициализируем коллекцию различных объектов на карте
         placemarkMapObject =
             mapObjectCollection.addPlacemark(location, ImageProvider.fromBitmap(marker))
-        coordinatesTV.setText("${location.latitude}\n${location.longitude}")
+        coordinatesTV.text = "${location.latitude}\n${location.longitude}"
     }
 
     private fun deleteMarker() {
         // Check if placemarkMapObject is not null
         placemarkMapObject?.let {
             // Remove the placemark from the mapObjectCollection
-            mapObjectCollection?.remove(it)
+            mapObjectCollection.remove(it)
             // Set placemarkMapObject to null to indicate it has been removed
             placemarkMapObject = null
         }
@@ -770,7 +947,7 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
                     // Move to the user's location with animation
                     val userLocation = Point(location.latitude, location.longitude)
                     locationOnMapKit.isVisible = true
-                    mapView?.map?.move(
+                    mapView.map?.move(
                         CameraPosition(userLocation, zoomValue, 0.0f, 0.0f),
                         Animation(Animation.Type.SMOOTH, 1f),
                         null
@@ -804,7 +981,7 @@ class AddSpotActivity : AppCompatActivity(), ActivityResultCaller {
     override fun onResume() {
         super.onResume()
         mapInputListener = object : InputListener {
-            override fun onMapTap(p0: com.yandex.mapkit.map.Map, p1: Point) {
+            override fun onMapTap(p0: Map, p1: Point) {
                 val latitude = p1.latitude
                 val longitude = p1.longitude
                 location = Point(latitude, longitude)

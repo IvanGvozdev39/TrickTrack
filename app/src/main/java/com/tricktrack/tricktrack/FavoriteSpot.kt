@@ -4,5 +4,6 @@ data class FavoriteSpot(
     val title: String,
     val latitude: Double,
     val longitude: Double,
-    val type: String
+    val type: String,
+    val translatedTitle: String
 )

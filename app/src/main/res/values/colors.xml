@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="cool_teal">#00788C</color>
+    <color name="cool_teal_half_transparent">#CC00788C</color>
     <color name="white">#FFFFFF</color>
     <color name="text_highlight_teal">#800090A8</color>
     <color name="black">#191919</color>
@@ -8,4 +9,7 @@
     <color name="lighter_grey">#F5F5F5</color>
     <color name="transparent">#00000000</color>
     <color name="red">#E10000</color>
+    <color name="green">#00A503</color>
+    <color name="dark_theme">#1D2223</color>
+    <color name="dark_theme_lighter">#242B2C</color>
 </resources>
